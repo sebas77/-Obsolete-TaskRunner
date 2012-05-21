@@ -29,7 +29,7 @@ namespace Test
 
 				//wait synchronously for 1 second
 				//usually it is an async operation
-				IEnumerator e = WaitForTwoSeconds ();
+				IEnumerator e = WaitForOneSecond ();
 				while (e.MoveNext())
 					;
 
@@ -39,7 +39,7 @@ namespace Test
 					onComplete ();
 			}
 
-			private IEnumerator WaitForTwoSeconds ()
+			private IEnumerator WaitForOneSecond ()
 			{
 				float time = Time.realtimeSinceStartup;
 
