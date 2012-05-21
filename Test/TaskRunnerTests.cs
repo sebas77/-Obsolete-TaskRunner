@@ -75,7 +75,7 @@ namespace Test
         #endregion
 
 		[Test]
-		public void SingleTask ()
+		public void TestSingleTaskExecution ()
 		{
 			float time = Time.realtimeSinceStartup;
 			bool test1Done = false;
@@ -88,6 +88,71 @@ namespace Test
 			task.Execute ();
 
 			Assert.That (test1Done == true && task.isDone == true && Time.realtimeSinceStartup - time >= 1);
+		}
+		
+		[Test]
+		public void TestSerialTasksExecution ()
+		{
+			bool allDone = false;
+
+			SerialTasks serialTasks = new SerialTasks ();
+
+			ITask task1 = new Task ();
+			ITask task2 = new Task ();
+
+			serialTasks.Add (task1);
+			serialTasks.Add (task2);
+			
+			serialTasks.onComplete += () => {
+				allDone = true; };
+
+			_taskRunner.RunSync (serialTasks);
+
+			Assert.That (allDone == true);
+		}
+		
+		[Test]
+		public void TestSerialTaskExecutionOrder1 ()
+		{
+			bool test2Done = false;
+			
+			SerialTasks serialTasks = new SerialTasks ();
+
+			ITask task1 = new Task ();
+			ITask task2 = new Task ();
+
+			task1.onComplete += () => {
+				Assert.That (test2Done == false); };
+
+			task2.onComplete += () => {
+				test2Done = true;};
+			
+			serialTasks.Add (task1);
+			serialTasks.Add (task2);
+			
+			_taskRunner.RunSync (serialTasks);
+		}
+		
+		[Test]
+		public void TestSerialTasksExecutionOrder2 ()
+		{
+			bool test1Done = false;
+
+			SerialTasks serialTasks = new SerialTasks ();
+
+			ITask task1 = new Task ();
+			ITask task2 = new Task ();
+
+			task1.onComplete += () => {
+				test1Done = true; };
+
+			task2.onComplete += () => {
+				Assert.That (test1Done == true); };
+			
+			serialTasks.Add (task1);
+			serialTasks.Add (task2);
+			
+			_taskRunner.RunSync (serialTasks);
 		}
 
 		[Test]
