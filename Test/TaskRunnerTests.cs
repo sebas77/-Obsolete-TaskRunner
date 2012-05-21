@@ -30,8 +30,7 @@ namespace Test
 				//wait synchronously for 1 second
 				//usually it is an async operation
 				IEnumerator e = WaitForOneSecond ();
-				while (e.MoveNext())
-					;
+				while (e.MoveNext());
 
 				isDone = true;
 
@@ -50,7 +49,7 @@ namespace Test
 
         #endregion
 
-        #region TaskImplementation
+        #region EnumerableImplementation
 
 		class Enumerable : IEnumerable
 		{
@@ -71,8 +70,6 @@ namespace Test
 		public void InitSources ()
 		{
 			_taskRunner = (TaskRunner)GameObject.FindObjectOfType (typeof(TaskRunner));
-
-			Assert.NotNull (_taskRunner);
 		}
 
         #endregion
@@ -102,21 +99,20 @@ namespace Test
 
 			SerialTasks serialTasks = new SerialTasks ();
 
-			ITask task = new Task ();
+			ITask task1 = new Task ();
+			ITask task2 = new Task ();
 
-			task.onComplete += () => {
+			task1.onComplete += () => {
 				test1Done = true;
 				Assert.That (test2Done == false); };
 
-			serialTasks.Add (task);
-
-			task = new Task ();
-
-			task.onComplete += () => {
+			task2.onComplete += () => {
 				test2Done = true;
 				Assert.That (test1Done == true); };
-
-			serialTasks.Add (task);
+			
+			serialTasks.Add (task1);
+			serialTasks.Add (task2);
+			
 			serialTasks.onComplete += () => {
 				allDone = true; };
 
