@@ -1,7 +1,7 @@
 TaskRunner for Unity3D
 ======================
 
-Runs Asynchronous tasks in Parallel and Serial.
+Runs Asynchronous tasks in Parallel and Serial. More information here: http://blog.sebaslab.com/run-serial-parallel-asynchronous-tasks-unity3d-c/
 
 Copyright (c) 2012 Sebastiano Mandalà
 
