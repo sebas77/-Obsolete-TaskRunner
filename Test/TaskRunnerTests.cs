@@ -29,7 +29,7 @@ namespace Test
 
 				//wait synchronously for 1 second
 				//usually it is an async operation
-				IEnumerator e = WaitForOneSecond ();
+				IEnumerator e = WaitHalfSecond ();
 				while (e.MoveNext());
 
 				isDone = true;
@@ -38,11 +38,11 @@ namespace Test
 					onComplete ();
 			}
 
-			private IEnumerator WaitForOneSecond ()
+			private IEnumerator WaitHalfSecond ()
 			{
 				float time = Time.realtimeSinceStartup;
 
-				while (Time.realtimeSinceStartup - time < 1)
+				while (Time.realtimeSinceStartup - time < 0.5)
 					yield return null;
 			}
 		}
@@ -65,245 +65,169 @@ namespace Test
         #endregion
 
         #region Setup/Teardown
+		
+		SerialTasks serialTasks1;
+		SerialTasks serialTasks2;
+		ParallelTasks parallelTasks1;
+		ParallelTasks parallelTasks2;
+
+		ITask task1;
+		ITask task2;
+		
+		Enumerable iterable1 = new Enumerable ();
+		Enumerable iterable2 = new Enumerable ();
+		
 
 		[SetUp]
-		public void InitSources ()
+		public void Setup ()
 		{
+			serialTasks1 = new SerialTasks ();
+			parallelTasks1 = new ParallelTasks ();
+			serialTasks2 = new SerialTasks ();
+			parallelTasks2 = new ParallelTasks ();
+
+			task1 = new Task ();
+			task2 = new Task ();
+			
 			_taskRunner = (TaskRunner)GameObject.FindObjectOfType (typeof(TaskRunner));
 		}
 
         #endregion
-
+		
 		[Test]
 		public void TestSingleTaskExecution ()
 		{
 			float time = Time.realtimeSinceStartup;
 			bool test1Done = false;
 
-			ITask task = new Task ();
-
-			task.onComplete += () => {
+			task1.onComplete += () => {
 				test1Done = true; };
 
-			task.Execute ();
+			task1.Execute ();
 
-			Assert.That (test1Done == true && task.isDone == true && Time.realtimeSinceStartup - time >= 1);
+			Assert.That (test1Done == true && task1.isDone == true && Time.realtimeSinceStartup - time >= 0.5);
+		}
+		
+		void SetupAndRunSerialTasks ()
+		{
+			serialTasks1.Add (task1);
+			serialTasks1.Add (task2);
+			
+			_taskRunner.RunSync (serialTasks1);
+		}
+
+		void SetupAndRunParallelTasks ()
+		{
+			parallelTasks1.Add (task1);
+			parallelTasks1.Add (task2);
+			
+			_taskRunner.RunSync (parallelTasks1);
 		}
 		
 		[Test]
-		public void TestSerialTasksExecution ()
+		public void TestSerializedTasksAreExecutedInSerial ()
 		{
 			bool allDone = false;
-
-			SerialTasks serialTasks = new SerialTasks ();
-
-			ITask task1 = new Task ();
-			ITask task2 = new Task ();
-
-			serialTasks.Add (task1);
-			serialTasks.Add (task2);
 			
-			serialTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (serialTasks);
+			serialTasks1.onComplete += () => { allDone = true; };
+			
+			SetupAndRunSerialTasks ();
 
 			Assert.That (allDone == true);
 		}
 		
 		[Test]
-		public void TestSerialTaskExecutionOrder1 ()
+		public void TestTask1IsExecutedBeforeTask2 ()
 		{
-			bool test2Done = false;
+			bool test1Done = false;
 			
-			SerialTasks serialTasks = new SerialTasks ();
-
-			ITask task1 = new Task ();
-			ITask task2 = new Task ();
-
-			task1.onComplete += () => {
-				Assert.That (test2Done == false); };
-
-			task2.onComplete += () => {
-				test2Done = true;};
+			task1.onComplete += () => {	test1Done = true; };
+			task2.onComplete += () => { Assert.That (test1Done == true);};
 			
-			serialTasks.Add (task1);
-			serialTasks.Add (task2);
-			
-			_taskRunner.RunSync (serialTasks);
+			SetupAndRunSerialTasks ();
 		}
 		
 		[Test]
-		public void TestSerialTasksExecutionOrder2 ()
+		public void TestTask1AndTask2AreExecutedInParallel ()
 		{
-			bool test1Done = false;
-
-			SerialTasks serialTasks = new SerialTasks ();
-
-			ITask task1 = new Task ();
-			ITask task2 = new Task ();
-
-			task1.onComplete += () => {
-				test1Done = true; };
-
-			task2.onComplete += () => {
-				Assert.That (test1Done == true); };
-			
-			serialTasks.Add (task1);
-			serialTasks.Add (task2);
-			
-			_taskRunner.RunSync (serialTasks);
-		}
-
-		[Test]
-		public void SerialITasks ()
-		{
-			bool test1Done = false;
-			bool test2Done = false;
 			bool allDone = false;
 
-			SerialTasks serialTasks = new SerialTasks ();
-
-			ITask task1 = new Task ();
-			ITask task2 = new Task ();
-
-			task1.onComplete += () => {
-				test1Done = true;
-				Assert.That (test2Done == false); };
-
-			task2.onComplete += () => {
-				test2Done = true;
-				Assert.That (test1Done == true); };
+			parallelTasks1.onComplete += () => { allDone = true; };
 			
-			serialTasks.Add (task1);
-			serialTasks.Add (task2);
-			
-			serialTasks.onComplete += () => {
-				allDone = true; };
+			SetupAndRunParallelTasks();
 
-			_taskRunner.RunSync (serialTasks);
-
-			Assert.That (test1Done == true && test2Done == true && allDone == true);
-		}
-
-		[Test]
-		public void ParallelITasks ()
-		{
-			bool test1Done = false;
-			bool test2Done = false;
-			bool allDone = false;
-
-			ParallelTasks parallelTasks = new ParallelTasks ();
-
-			ITask task = new Task ();
-
-			task.onComplete += () => {
-				test1Done = true; };
-
-			parallelTasks.Add (task);
-
-			task = new Task ();
-
-			task.onComplete += () => {
-				test2Done = true; };
-
-			parallelTasks.Add (task);
-			parallelTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (parallelTasks);
-
-			Assert.That (test1Done, Is.EqualTo (true));
-			Assert.That (test2Done, Is.EqualTo (true));
 			Assert.That (allDone, Is.EqualTo (true));
 		}
 
 		[Test]
-		public void SerialEnumerable ()
+		public void TestEnumerableAreExecutedInSerial ()
 		{
 			bool allDone = false;
 
-			SerialTasks serialTasks = new SerialTasks ();
+			serialTasks1.onComplete += () => { allDone = true; };
 
-			Enumerable task = new Enumerable ();
-
-			serialTasks.Add (task);
-
-			task = new Enumerable ();
-
-			serialTasks.Add (task);
-			serialTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (serialTasks);
+			serialTasks1.Add (iterable1);
+			serialTasks1.Add (iterable2);
+			
+			_taskRunner.RunSync (serialTasks1);
 
 			Assert.That (allDone == true);
 		}
 
 		[Test]
-		public void ParallelEnumerable ()
+		public void TestEnumerableAreExecutedInParallel ()
 		{
 			bool allDone = false;
 
-			ParallelTasks parallelTasks = new ParallelTasks ();
+			parallelTasks1.onComplete += () => { allDone = true; };
 
-			Enumerable task = new Enumerable ();
-
-			parallelTasks.Add (task);
-
-			task = new Enumerable ();
-
-			parallelTasks.Add (task);
-			parallelTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (parallelTasks);
-
+			parallelTasks1.Add (iterable1);
+			parallelTasks1.Add (iterable2);
+			
+			_taskRunner.RunSync (parallelTasks1);
+			
 			Assert.That (allDone == true);
+		}
+		
+		[Test]
+		public void TestParallelTasks1IsExecutedBeforeParallelTask2 ()
+		{
+			bool parallelTasks1Done = false;
+
+			parallelTasks1.Add (task1);
+			parallelTasks1.Add (iterable1);
+			parallelTasks1.onComplete += () => { parallelTasks1Done = true; };
+
+			parallelTasks2.Add (task2);
+			parallelTasks2.Add (iterable2);
+			parallelTasks2.onComplete += () => { Assert.That(parallelTasks1Done == true); };
+			
+			serialTasks1.Add (parallelTasks1);
+			serialTasks1.Add (parallelTasks2);
+			
+			_taskRunner.RunSync (serialTasks1);
 		}
 
 		[Test]
-		public void SerialParallelEnumerable ()
+		public void TestParallelTasksAreExecutedInSerial ()
 		{
 			bool allDone = false;
 			bool parallelTasks1Done = false;
 			bool parallelTasks2Done = false;
 
-			SerialTasks serialTasks = new SerialTasks ();
+			parallelTasks1.Add (task1);
+			parallelTasks1.Add (iterable1);
+			parallelTasks1.onComplete += () => { parallelTasks1Done = true; };
 
-			ParallelTasks parallelTasks1 = new ParallelTasks ();
+			parallelTasks2.Add (task2);
+			parallelTasks2.Add (iterable2);
+			parallelTasks2.onComplete += () => { parallelTasks2Done = true; };
+			
+			serialTasks1.Add (parallelTasks1);
+			serialTasks1.Add (parallelTasks2);
+			serialTasks1.onComplete += () => { allDone = true; };
 
-			Enumerable task = new Enumerable ();
-
-			parallelTasks1.Add (task);
-
-			task = new Enumerable ();
-
-			parallelTasks1.Add (task);
-			parallelTasks1.onComplete += () => {
-				parallelTasks1Done = true;
-				Assert.That (parallelTasks2Done == false); };
-
-			ParallelTasks parallelTasks2 = new ParallelTasks ();
-
-			task = new Enumerable ();
-
-			parallelTasks2.Add (task);
-
-			task = new Enumerable ();
-
-			parallelTasks2.Add (task);
-			parallelTasks2.onComplete += () => {
-				parallelTasks2Done = true;
-				Assert.That (parallelTasks1Done == true); };
-
-			serialTasks.Add (parallelTasks1);
-			serialTasks.Add (parallelTasks2);
-
-			serialTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (serialTasks);
+			_taskRunner.RunSync (serialTasks1);
 
 			Assert.That (parallelTasks1Done == true, "parallelTasks1Done");
 			Assert.That (parallelTasks2Done == true, "parallelTasks2Done");
@@ -311,45 +235,25 @@ namespace Test
 		}
 
 		[Test]
-		public void SerialParallelITask ()
+		public void TestSerialTasksAreExecutedInParallel ()
 		{
 			bool allDone = false;
 			bool serialTasks1Done = false;
 			bool serialTasks2Done = false;
 
-			ParallelTasks parallelTasks = new ParallelTasks ();
+			serialTasks1.Add (iterable1);
+			serialTasks1.Add (iterable2);
+			serialTasks1.onComplete += () => {serialTasks1Done = true; };
 
-			SerialTasks serialTasks1 = new SerialTasks ();
+			serialTasks2.Add (task1);
+			serialTasks2.Add (task2);
+			serialTasks2.onComplete += () => {serialTasks2Done = true; };
 
-			ITask task = new Task ();
+			parallelTasks1.Add (serialTasks1);
+			parallelTasks1.Add (serialTasks2);
+			parallelTasks1.onComplete += () => {allDone = true; };
 
-			serialTasks1.Add (task);
-
-			task = new Task ();
-
-			serialTasks1.Add (task);
-			serialTasks1.onComplete += () => {
-				serialTasks1Done = true; };
-
-			SerialTasks serialTasks2 = new SerialTasks ();
-
-			task = new Task ();
-
-			serialTasks2.Add (task);
-
-			task = new Task ();
-
-			serialTasks2.Add (task);
-			serialTasks2.onComplete += () => {
-				serialTasks2Done = true; };
-
-			parallelTasks.Add (serialTasks1);
-			parallelTasks.Add (serialTasks2);
-
-			parallelTasks.onComplete += () => {
-				allDone = true; };
-
-			_taskRunner.RunSync (parallelTasks);
+			_taskRunner.RunSync (parallelTasks1);
 
 			Assert.That (serialTasks1Done == true);
 			Assert.That (serialTasks2Done == true);
