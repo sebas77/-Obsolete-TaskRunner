@@ -9,7 +9,7 @@ namespace Tasks
 		
 		bool		isDone { get; }
 		
-		void		Execute();	
+		void		Execute ();	
 	}
 }
 

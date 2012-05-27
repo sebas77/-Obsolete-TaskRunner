@@ -27,7 +27,6 @@ namespace Test
 			{
 				isDone = false;
 
-				//wait synchronously for 1 second
 				//usually it is an async operation
 				IEnumerator e = WaitHalfSecond ();
 				while (e.MoveNext());

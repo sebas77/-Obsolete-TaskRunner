@@ -5,24 +5,24 @@ namespace Tasks
 {
 	public class EnumerableTask: IEnumerable
 	{
-		public ITask task {get; private set;}
+		public ITask task { get; private set; }
 			
 		public EnumerableTask (ITask task)
 		{
 			this.task = task;
 		}
 		
-		public IEnumerator GetEnumerator()
+		public IEnumerator GetEnumerator ()
 		{
-			task.Execute();
+			task.Execute ();
 			
 			while (task.isDone == false)
 				yield return null;
 		}
 		
-		public override string ToString() 
+		public override string ToString ()
 		{
-			return task.ToString();
+			return task.ToString ();
 		}
 	}
 }
