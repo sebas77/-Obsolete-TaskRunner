@@ -6,47 +6,58 @@ using Tasks;
 
 public class TaskRunner: MonoBehaviour
 {
-	static GameObject _instance;
+	static GameObject _gameObject;
+	
+	static private TaskRunner _instance;
+	static public TaskRunner Instance {get { return _instance; }}
 		
-	public void Run (IEnumerable task)
+	public void Run(IEnumerable task)
 	{
 		Run (task.GetEnumerator ());
 	}
 	
-	public void Run (IEnumerator task)
+	public void Run(IEnumerator task)
 	{
 		if (this.enabled == true)
 			StartCoroutine (task);
 	}
 	
-	public void RunSync (IEnumerable task)
+	public void RunSync(IEnumerable task)
 	{
 		RunSync (task.GetEnumerator ());
 	}
 	
-	public void RunSync (IEnumerator task)
+	public void RunSync(IEnumerator task)
 	{
-		while (task.MoveNext() == true)
-			;
+		while (task.MoveNext() == true);
+	}
+	
+	public void Stop()
+	{
+		StopAllCoroutines();
 	}
 	
 	void Awake ()
 	{
-		if (_instance == null)
-			_instance = gameObject;
+		if (_gameObject == null)
+		{
+			_gameObject = gameObject;
+			_instance = this;
+		}
 		else 
-			DestroyImmediate (this); //only one task runner for each project please
+			DestroyImmediate(this); //only one task runner for each project please
 	}
 
-	void OnDestroy ()
+	void OnDestroy()	//clean up if the gameobject is destroyed
 	{
-		_instance = null; 
+		_gameObject = null; 
+		_instance = null;
         
-		StopAllCoroutines ();
+		StopAllCoroutines();
 	}
 }
 	
-public delegate void TasksComplete ();
+public delegate void TasksComplete();
 
 
  

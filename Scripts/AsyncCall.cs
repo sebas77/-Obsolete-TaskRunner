@@ -11,28 +11,11 @@ public class AsyncCall
 
 	private System.Object 			_obj;
 	
-	static private TaskRunner 		_taskRunner = LookUp ();
-	
-	static private TaskRunner LookUp ()
-	{
-		TaskRunner taskRunner = (TaskRunner)GameObject.FindObjectOfType (typeof(TaskRunner));
-		
-		if (taskRunner == null)
-			throw new ArgumentNullException ("AsyncCall");
-			
-		return taskRunner;
-	}
-	
-	public AsyncCall OnComplete (AsyncCallComplete func)
+	public void RunOnComplete (AsyncCallComplete func)
 	{
 		onComplete = func;
 		
-		return this;
-	}
-	
-	public void Run ()
-	{
-		_taskRunner.Run (yieldable (_obj));
+		TaskRunner.Instance.Run (yieldable (_obj));
 	}
 		
 	public AsyncCall (System.Object obj)
