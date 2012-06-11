@@ -88,7 +88,7 @@ namespace Test
 			task1 = new Task ();
 			task2 = new Task ();
 			
-			_taskRunner = (TaskRunner)GameObject.FindObjectOfType (typeof(TaskRunner));
+			_taskRunner = TaskRunner.Instance;
 		}
 
         #endregion

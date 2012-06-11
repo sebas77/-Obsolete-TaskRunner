@@ -8,8 +8,29 @@ public class TaskRunner: MonoBehaviour
 {
 	static GameObject _gameObject;
 	
-	static private TaskRunner _instance;
-	static public TaskRunner Instance {get { return _instance; }}
+	static private TaskRunner _instance = null;
+		
+	static public TaskRunner Instance
+	{
+		get 
+		{
+			if (_instance == null)
+			{
+				TaskRunner instance = (MonoBehaviour.FindObjectOfType(typeof(TaskRunner)) as TaskRunner);
+				if (instance)
+				{
+					_instance = instance;
+				}
+				else
+				{
+					GameObject go = new GameObject("TaskRunner");
+					_instance = go.AddComponent<TaskRunner>();
+				}
+			}
+			
+			return _instance;
+		}
+	}
 		
 	public void Run(IEnumerable task)
 	{
