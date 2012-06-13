@@ -4,26 +4,17 @@ using System.Collections;
 using UnityEngine;
 using Tasks;
 
-public class TaskRunner: MonoBehaviour
+public class TaskRunner
 {
+	private MonoBehaviour _runner;
+	
 	static private TaskRunner _instance;
 		
 	static public TaskRunner Instance
 	{
 		get 
 		{
-			if (_instance == null)
-			{
-				TaskRunner instance = (MonoBehaviour.FindObjectOfType(typeof(TaskRunner)) as TaskRunner);
-
-				if (instance)
-					_instance = instance;
-				else
-				{
-					GameObject go = new GameObject("TaskRunner");
-					_instance = go.AddComponent<TaskRunner>();
-				}
-			}
+			InitInstance ();
 			
 			return _instance;
 		}
@@ -36,8 +27,8 @@ public class TaskRunner: MonoBehaviour
 	
 	public void Run(IEnumerator task)
 	{
-		if (this.enabled == true)
-			StartCoroutine (task);
+		if (_runner.enabled == true)
+			_runner.StartCoroutine(task);
 	}
 	
 	public void RunSync(IEnumerable task)
@@ -52,24 +43,18 @@ public class TaskRunner: MonoBehaviour
 	
 	public void Stop()
 	{
-		StopAllCoroutines();
+		_runner.StopAllCoroutines();
 	}
 	
-	void Awake ()
+	static void InitInstance ()
 	{
-		if (_instance == null || _instance != this)
+		if (_instance == null)
 		{
-			Destroy(_instance);
-			_instance = this;
-			return;
+			GameObject go = new GameObject("TaskRunner");
+			_instance = new TaskRunner();
+			_instance._runner = go.AddComponent<MonoBehaviour>();
+			GameObject.DontDestroyOnLoad(go);
 		}
-	}
-
-	void OnDestroy()	//clean up if the gameobject is destroyed
-	{
-		_instance = null;
-        
-		StopAllCoroutines();
 	}
 }
 	
