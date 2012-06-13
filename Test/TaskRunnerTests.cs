@@ -1,11 +1,8 @@
 #region Usings
-using System;
 using System.Collections;
-using System.Collections.Generic;
+using Tasks;
 using NUnit.Framework;
 using UnityEngine;
-using Tasks;
-
 #endregion
 
 namespace Test
@@ -28,20 +25,20 @@ namespace Test
 				isDone = false;
 
 				//usually it is an async operation
-				IEnumerator e = WaitHalfSecond ();
+				IEnumerator e = Wait ();
 				while (e.MoveNext());
-
+				
 				isDone = true;
 
 				if (onComplete != null)
 					onComplete ();
 			}
 
-			private IEnumerator WaitHalfSecond ()
+			private IEnumerator Wait ()
 			{
 				float time = Time.realtimeSinceStartup;
 
-				while (Time.realtimeSinceStartup - time < 0.5)
+				while (Time.realtimeSinceStartup - time < 0.1)
 					yield return null;
 			}
 		}
@@ -56,7 +53,7 @@ namespace Test
 			{
 				float time = Time.realtimeSinceStartup;
 
-				while (Time.realtimeSinceStartup - time < 1)
+				while (Time.realtimeSinceStartup - time < 0.1)
 					yield return null;
 			}
 		}
@@ -90,11 +87,11 @@ namespace Test
 			
 			_taskRunner = TaskRunner.Instance;
 		}
-
+		
         #endregion
 		
 		[Test]
-		public void TestSingleTaskExecution ()
+		public void TestSingleTaskExecution()
 		{
 			float time = Time.realtimeSinceStartup;
 			bool test1Done = false;
@@ -104,7 +101,7 @@ namespace Test
 
 			task1.Execute ();
 
-			Assert.That (test1Done == true && task1.isDone == true && Time.realtimeSinceStartup - time >= 0.5);
+			Assert.That (test1Done == true && task1.isDone == true && Time.realtimeSinceStartup - time >= 0.1 && Time.realtimeSinceStartup - time < 0.2);
 		}
 		
 		void SetupAndRunSerialTasks ()
@@ -155,7 +152,7 @@ namespace Test
 			
 			SetupAndRunParallelTasks();
 
-			Assert.That (allDone, Is.EqualTo (true));
+			Assert.That(allDone, Is.EqualTo(true));
 		}
 
 		[Test]

@@ -22,18 +22,21 @@ public class TaskRunner
 		
 	public void Run(IEnumerable task)
 	{
-		Run (task.GetEnumerator ());
+		Run (task.GetEnumerator());
 	}
 	
 	public void Run(IEnumerator task)
 	{
-		if (_runner.enabled == true)
+		if (_runner != null && _runner.enabled == true)
+		{
+			_runner.gameObject.active = true;
 			_runner.StartCoroutine(task);
+		}
 	}
 	
 	public void RunSync(IEnumerable task)
 	{
-		RunSync (task.GetEnumerator ());
+		RunSync(task.GetEnumerator());
 	}
 	
 	public void RunSync(IEnumerator task)
@@ -43,7 +46,8 @@ public class TaskRunner
 	
 	public void Stop()
 	{
-		_runner.StopAllCoroutines();
+		if (_runner != null)
+			_runner.StopAllCoroutines();
 	}
 	
 	static void InitInstance ()
