@@ -7,30 +7,30 @@ public delegate void AsyncCallComplete (System.Object obj);
 
 public class AsyncCall
 {
-	private event AsyncCallComplete	onComplete = null;
+	private event AsyncCallComplete	_onComplete = null;
 
 	private System.Object 			_obj;
 	
-	public void RunOnComplete (AsyncCallComplete func)
+	public void RunOnComplete(AsyncCallComplete func)
 	{
-		onComplete = func;
+		_onComplete = func;
 		
-		TaskRunner.Instance.Run (yieldable (_obj));
+		TaskRunner.Instance.Run(yieldable(_obj));
 	}
 		
-	public AsyncCall (System.Object obj)
+	public AsyncCall(System.Object obj)
 	{
-		onComplete = null;
+		_onComplete = null;
 		
 		_obj = obj;
 	}
 	
-	private IEnumerator yieldable (System.Object obj)
+	private IEnumerator yieldable(System.Object obj)
 	{
 		yield return obj;
 		
-		if (onComplete != null)
-			onComplete (obj);
+		if (_onComplete != null)
+			_onComplete(obj);
 	}
 }
 

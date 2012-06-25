@@ -7,10 +7,14 @@ namespace Tasks
 {
 	public class ParallelTasks: Tasks
     {
-        public event TasksComplete		onComplete;
+        public event Action		onComplete;
+		
+		private List<Stack<IEnumerator>> listOfStacks;
  
         public ParallelTasks():base()
-        {}
+        {
+			listOfStacks = new List<Stack<IEnumerator>>();
+		}
 		
 		override public IEnumerator GetEnumerator()
 		{
@@ -22,31 +26,45 @@ namespace Tasks
 				
 				stack.Push(enumerator);
 				
-				if (enumerator is SerialTasks)
-					Debug.Log("New Set of Serial Tasks Started from ParallelTasks");
-							
-	            while (stack.Count > 0)
-	            {
-	                IEnumerator ce = stack.Peek(); //without popping it.
+				listOfStacks.Add(stack);
+			}
+			
+			registeredEnumerators.Clear();
+				
+			while (listOfStacks.Count > 0)
+			{
+				for (int i = 0; i < listOfStacks.Count; ++i)
+				{
+					Stack<IEnumerator> stack = listOfStacks[i];
 					
-	                if (ce.MoveNext() == false)
+					if (stack.Count > 0)
+		            {
+		                IEnumerator ce = stack.Peek(); //without popping it.
+						
+		                if (ce.MoveNext() == false)
+						{
+							Debug.Log("Parallel Task " + i + " Done");
+		                    
+							stack.Pop(); //now it can be popped
+						}
+		                else //ok the iteration is not over
+						if (ce.Current != null && ce.Current != ce)
+						{
+							if (ce.Current is IEnumerable)	//what we got from the enumeration is an IEnumerable?
+								stack.Push(((IEnumerable)ce.Current).GetEnumerator());
+							else
+							if (ce.Current is IEnumerator)	//what we got from the enumeration is an IEnumerator?
+								stack.Push(ce.Current as IEnumerator);
+						}
+		 				
+						yield return null;
+		            }
+					else
 					{
-						Debug.Log("Parallel Task Done");
-	                    
-						stack.Pop(); //now it can be popped
+						listOfStacks.RemoveAt(i);
+						i--;
 					}
-	                else //ok the iteration is not over
-					if (ce.Current != null && ce.Current != ce)
-					{
-						if (ce.Current is IEnumerable)	//what we got from the enumeration is an IEnumerable?
-							stack.Push(((IEnumerable)ce.Current).GetEnumerator());
-						else
-						if (ce.Current is IEnumerator)	//what we got from the enumeration is an IEnumerator?
-							stack.Push(ce.Current as IEnumerator);
-					}
-	 				
-					yield return null;
-	            }
+				}
 			}
 			
 			Debug.Log("Parallel Tasks Ended");

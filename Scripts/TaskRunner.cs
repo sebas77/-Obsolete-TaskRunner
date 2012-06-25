@@ -55,14 +55,16 @@ public class TaskRunner
 		if (_instance == null)
 		{
 			GameObject go = new GameObject("TaskRunner");
+			
 			_instance = new TaskRunner();
 			_instance._runner = go.AddComponent<MonoBehaviour>();
+			
 			GameObject.DontDestroyOnLoad(go);
 		}
 	}
 }
 	
-public delegate void TasksComplete();
+
 
 
  

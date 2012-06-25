@@ -3,6 +3,7 @@ using System.Collections;
 using Tasks;
 using NUnit.Framework;
 using UnityEngine;
+using System.Threading;
 #endregion
 
 namespace Test
@@ -10,153 +11,35 @@ namespace Test
 	[TestFixture]
     public class TaskRunnerTests
 	{
-		TaskRunner _taskRunner;
-
-        #region TaskImplementation
-
-		class Task : ITask
-		{
-			public event TasksComplete onComplete;
-
-			public bool isDone { get; private set; }
-
-			public void Execute ()
-			{
-				isDone = false;
-
-				//usually it is an async operation
-				IEnumerator e = Wait ();
-				while (e.MoveNext());
-				
-				isDone = true;
-
-				if (onComplete != null)
-					onComplete ();
-			}
-
-			private IEnumerator Wait ()
-			{
-				float time = Time.realtimeSinceStartup;
-
-				while (Time.realtimeSinceStartup - time < 0.1)
-					yield return null;
-			}
-		}
-
-        #endregion
-
-        #region EnumerableImplementation
-
-		class Enumerable : IEnumerable
-		{
-			public IEnumerator GetEnumerator ()
-			{
-				float time = Time.realtimeSinceStartup;
-
-				while (Time.realtimeSinceStartup - time < 0.1)
-					yield return null;
-			}
-		}
-
-        #endregion
-
-        #region Setup/Teardown
-		
-		SerialTasks serialTasks1;
-		SerialTasks serialTasks2;
-		ParallelTasks parallelTasks1;
-		ParallelTasks parallelTasks2;
-
-		ITask task1;
-		ITask task2;
-		
-		Enumerable iterable1 = new Enumerable ();
-		Enumerable iterable2 = new Enumerable ();
-		
-
 		[SetUp]
 		public void Setup ()
 		{
-			serialTasks1 = new SerialTasks ();
-			parallelTasks1 = new ParallelTasks ();
-			serialTasks2 = new SerialTasks ();
-			parallelTasks2 = new ParallelTasks ();
+			serialTasks1 = new SerialTasks();
+			parallelTasks1 = new ParallelTasks();
+			serialTasks2 = new SerialTasks();
+			parallelTasks2 = new ParallelTasks();
 
-			task1 = new Task ();
-			task2 = new Task ();
+			task1 = new Task(15);
+			task2 = new Task(5);
+			
+			iterable1 = new Enumerable(15);
+			iterable2 = new Enumerable(5);
 			
 			_taskRunner = TaskRunner.Instance;
 		}
 		
-        #endregion
-		
 		[Test]
-		public void TestSingleTaskExecution()
+		public void TestSingleEnumerationBlockExecution()
 		{
-			float time = Time.realtimeSinceStartup;
-			bool test1Done = false;
-
-			task1.onComplete += () => {
-				test1Done = true; };
-
-			task1.Execute ();
-
-			Assert.That (test1Done == true && task1.isDone == true && Time.realtimeSinceStartup - time >= 0.1 && Time.realtimeSinceStartup - time < 0.2);
-		}
-		
-		void SetupAndRunSerialTasks ()
-		{
-			serialTasks1.Add (task1);
-			serialTasks1.Add (task2);
+			IEnumerator enumerable = iterable1.GetEnumerator();
 			
-			_taskRunner.RunSync (serialTasks1);
-		}
+			while (enumerable.MoveNext() == true);
 
-		void SetupAndRunParallelTasks ()
-		{
-			parallelTasks1.Add (task1);
-			parallelTasks1.Add (task2);
-			
-			_taskRunner.RunSync (parallelTasks1);
+			Assert.That(iterable1.AllRight(), Is.True);
 		}
 		
 		[Test]
-		public void TestSerializedTasksAreExecutedInSerial ()
-		{
-			bool allDone = false;
-			
-			serialTasks1.onComplete += () => { allDone = true; };
-			
-			SetupAndRunSerialTasks ();
-
-			Assert.That (allDone == true);
-		}
-		
-		[Test]
-		public void TestTask1IsExecutedBeforeTask2 ()
-		{
-			bool test1Done = false;
-			
-			task1.onComplete += () => {	test1Done = true; };
-			task2.onComplete += () => { Assert.That (test1Done == true);};
-			
-			SetupAndRunSerialTasks ();
-		}
-		
-		[Test]
-		public void TestTask1AndTask2AreExecutedInParallel ()
-		{
-			bool allDone = false;
-
-			parallelTasks1.onComplete += () => { allDone = true; };
-			
-			SetupAndRunParallelTasks();
-
-			Assert.That(allDone, Is.EqualTo(true));
-		}
-
-		[Test]
-		public void TestEnumerableAreExecutedInSerial ()
+		public void TestEnumerableAreExecutedInSerial()
 		{
 			bool allDone = false;
 
@@ -168,12 +51,22 @@ namespace Test
 			_taskRunner.RunSync (serialTasks1);
 
 			Assert.That (allDone == true);
+			Assert.That (iterable1.AllRight() == true);
+			Assert.That (iterable2.AllRight() == true);
 		}
 
 		[Test]
-		public void TestEnumerableAreExecutedInParallel ()
+		public void TestEnumerableAreExecutedInParallel()
 		{
 			bool allDone = false;
+			bool test2MustFinishBeforeTest1 = false;
+			
+			iterable1.onComplete += () => { 
+				Assert.That (test2MustFinishBeforeTest1 == true);
+			};
+			iterable2.onComplete += () => {	
+				test2MustFinishBeforeTest1 = true; 
+			};
 
 			parallelTasks1.onComplete += () => { allDone = true; };
 
@@ -185,6 +78,66 @@ namespace Test
 			Assert.That (allDone == true);
 		}
 		
+		[Test]
+		public void TestSingleTaskExecution()
+		{
+			task1.Execute();
+			
+			while (task1.isDone == false);
+
+			Assert.That(task1.isDone == true);
+		}
+		
+		[Test]
+		public void TestSingleTaskExecutionCallsOnComplete()
+		{
+			bool test1Done = false;
+
+			task1.onComplete += () => {
+				test1Done = true; };
+			
+			task1.Execute();
+			
+			while (task1.isDone == false);
+
+			Assert.That(test1Done == true);
+		}
+		
+		[Test]
+		public void TestSerializedTasksAreExecutedInSerial()
+		{
+			bool allDone = false;
+			
+			serialTasks1.onComplete += () => { allDone = true; };
+			
+			SetupAndRunSerialTasks();
+
+			Assert.That(allDone == true);
+		}
+		
+		[Test]
+		public void TestTask1IsExecutedBeforeTask2()
+		{
+			bool test1Done = false;
+			
+			task1.onComplete += () => {	test1Done = true; };
+			task2.onComplete += () => { Assert.That (test1Done == true); };
+			
+			SetupAndRunSerialTasks();
+		}
+		
+		[Test]
+		public void TestEnumerable1AndTask2AreExecutedInParallel()
+		{
+			bool allDone = false;
+						
+			parallelTasks1.onComplete += () => { allDone = true; };
+				
+			SetupAndRunParallelTasks();
+
+			Assert.That(allDone, Is.EqualTo(true));
+		}
+
 		[Test]
 		public void TestParallelTasks1IsExecutedBeforeParallelTask2 ()
 		{
@@ -255,5 +208,104 @@ namespace Test
 			Assert.That (serialTasks2Done == true);
 			Assert.That (allDone == true);
 		}
+		
+        #region TaskImplementation
+
+		class Task : ITask
+		{
+			public event System.Action onComplete;
+			
+			public bool isDone { get; private set; }
+			
+			public Task(int niterations)
+			{
+				isDone = false;
+			}
+
+			public void Execute()
+			{
+				//usually this is an async operation (like www)
+				//otherwise it would not make much sense :)
+				isDone = true;
+
+				if (onComplete != null)
+					onComplete();
+			}
+		}
+
+        #endregion
+
+        #region EnumerableImplementation
+
+		class Enumerable : IEnumerable
+		{
+			int totalIterations;
+			int iterations;
+			
+			public event System.Action onComplete;
+			
+			public Enumerable(int niterations)
+			{
+				iterations = 0; 
+				totalIterations = niterations;
+			}
+			
+			public bool AllRight()
+			{
+				return iterations == totalIterations; 
+			}
+			
+			public IEnumerator GetEnumerator()
+			{
+				while (iterations < totalIterations)
+				{
+					iterations++;
+					
+					yield return null;
+				}
+				
+				if (onComplete != null)
+					onComplete();
+			}
+		}
+
+        #endregion
+
+        #region Setup/Teardown
+		
+		TaskRunner _taskRunner;
+		
+		SerialTasks serialTasks1;
+		SerialTasks serialTasks2;
+		ParallelTasks parallelTasks1;
+		ParallelTasks parallelTasks2;
+
+		Task task1;
+		Task task2;
+		
+		Enumerable iterable1;
+		Enumerable iterable2;
+		
+        #endregion
+		
+		#region Helper functions
+		
+		void SetupAndRunSerialTasks ()
+		{
+			serialTasks1.Add (task1);
+			serialTasks1.Add (task2);
+			
+			_taskRunner.RunSync (serialTasks1);
+		}
+
+		void SetupAndRunParallelTasks ()
+		{
+			parallelTasks1.Add (task1);
+			parallelTasks1.Add (task2);
+			
+			_taskRunner.RunSync (parallelTasks1);
+		}
+		
+		#endregion		
 	}
 }
