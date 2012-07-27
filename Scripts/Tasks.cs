@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Tasks
 {
@@ -9,6 +10,7 @@ namespace Tasks
 		protected List<IEnumerator> 	registeredEnumerators { get; private set; }
 
 		public bool						isRunning { protected set; get; }
+		public int						registeredTasks { get { return registeredEnumerators.Count; } }
 		
 		public Tasks()
 		{
@@ -25,6 +27,9 @@ namespace Tasks
 		
 		public void Add(IEnumerable enumerable)
 		{
+			if ((enumerable is Tasks) && (enumerable as Tasks).registeredTasks == 0)
+				Debug.LogError("Avoid to Register zero size tasks");
+					
 			if (enumerable == null)
 				throw new ArgumentNullException();
 			

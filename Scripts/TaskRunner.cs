@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using Tasks;
 
 public class TaskRunner
 {
@@ -22,7 +19,7 @@ public class TaskRunner
 		
 	public void Run(IEnumerable task)
 	{
-		Run (task.GetEnumerator());
+		Run(task.GetEnumerator());
 	}
 	
 	public void Run(IEnumerator task)

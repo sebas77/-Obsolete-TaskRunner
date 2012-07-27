@@ -20,6 +20,8 @@ namespace Tasks
 		{
 			isRunning = true;
 			
+			listOfStacks.Clear();
+			
 			foreach (IEnumerator enumerator in registeredEnumerators)
             {
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
@@ -30,7 +32,7 @@ namespace Tasks
 			}
 			
 			registeredEnumerators.Clear();
-				
+			
 			while (listOfStacks.Count > 0)
 			{
 				for (int i = 0; i < listOfStacks.Count; ++i)
