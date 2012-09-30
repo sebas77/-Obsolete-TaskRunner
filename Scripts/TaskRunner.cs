@@ -51,12 +51,17 @@ public class TaskRunner
 	{
 		if (_instance == null)
 		{
-			GameObject go = new GameObject("TaskRunner");
+			GameObject go = GameObject.Find("TaskRunner");
+			
+			if (go == null)
+			{
+				go = new GameObject("TaskRunner");
+				
+				GameObject.DontDestroyOnLoad(go);
+			}
 			
 			_instance = new TaskRunner();
 			_instance._runner = go.AddComponent<MonoBehaviour>();
-			
-			GameObject.DontDestroyOnLoad(go);
 		}
 	}
 }

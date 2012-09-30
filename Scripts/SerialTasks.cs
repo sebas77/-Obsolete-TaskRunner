@@ -16,12 +16,14 @@ namespace Tasks
 		{
 			isRunning = true;
 			
+			Debug.Log("Serialized Tasks Started, number of tasks: " + registeredEnumerators.Count);
+			
 			while (registeredEnumerators.Count > 0) 
 			{
 				//create a new stack for each task
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
 				//let`s get the first available task
-				IEnumerator task = registeredEnumerators [0];
+				IEnumerator task = registeredEnumerators[0];
 				//put in the stack
 				stack.Push (task);
 				
@@ -30,11 +32,7 @@ namespace Tasks
 					IEnumerator ce = stack.Peek(); //get the current task to execute
 	             
 					if (ce.MoveNext() == false) 
-					{
 						stack.Pop(); //task is done (the iteration is over)
-						
-						Debug.Log("Serialized Task Done");
-					} 
 					else 
 					if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
 					{	

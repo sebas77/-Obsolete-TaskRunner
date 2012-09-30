@@ -2,8 +2,6 @@
 using System.Collections;
 using Tasks;
 using NUnit.Framework;
-using UnityEngine;
-using System.Threading;
 #endregion
 
 namespace Test
@@ -182,13 +180,11 @@ namespace Test
 			Assert.That (parallelTasks2Done == true, "parallelTasks2Done");
 			Assert.That (allDone == true, "allDone");
 		}
-
+		
 		[Test]
-		public void TestSerialTasksAreExecutedInParallel ()
+		public void TestSerialTasks1ExecutedInParallel ()
 		{
-			bool allDone = false;
 			bool serialTasks1Done = false;
-			bool serialTasks2Done = false;
 
 			serialTasks1.Add (iterable1);
 			serialTasks1.Add (iterable2);
@@ -196,7 +192,45 @@ namespace Test
 
 			serialTasks2.Add (task1);
 			serialTasks2.Add (task2);
+
+			parallelTasks1.Add (serialTasks1);
+			parallelTasks1.Add (serialTasks2);
+
+			_taskRunner.RunSync (parallelTasks1);
+
+			Assert.That (serialTasks1Done == true);
+		}
+		
+		[Test]
+		public void TestSerialTasks2ExecutedInParallel ()
+		{
+			bool serialTasks2Done = false;
+
+			serialTasks1.Add (iterable1);
+			serialTasks1.Add (iterable2);
+
+			serialTasks2.Add (task1);
+			serialTasks2.Add (task2);
 			serialTasks2.onComplete += () => {serialTasks2Done = true; };
+
+			parallelTasks1.Add (serialTasks1);
+			parallelTasks1.Add (serialTasks2);
+
+			_taskRunner.RunSync (parallelTasks1);
+
+			Assert.That (serialTasks2Done == true);
+		}
+
+		[Test]
+		public void TestSerialTasksAreAllExecutedInParallel ()
+		{
+			bool allDone = false;
+
+			serialTasks1.Add (iterable1);
+			serialTasks1.Add (iterable2);
+
+			serialTasks2.Add (task1);
+			serialTasks2.Add (task2);
 
 			parallelTasks1.Add (serialTasks1);
 			parallelTasks1.Add (serialTasks2);
@@ -204,8 +238,6 @@ namespace Test
 
 			_taskRunner.RunSync (parallelTasks1);
 
-			Assert.That (serialTasks1Done == true);
-			Assert.That (serialTasks2Done == true);
 			Assert.That (allDone == true);
 		}
 		

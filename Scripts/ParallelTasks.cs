@@ -33,6 +33,8 @@ namespace Tasks
 			
 			registeredEnumerators.Clear();
 			
+			Debug.Log("Parallel Tasks Started, number of tasks: " + listOfStacks.Count);
+				
 			while (listOfStacks.Count > 0)
 			{
 				for (int i = 0; i < listOfStacks.Count; ++i)
@@ -44,11 +46,7 @@ namespace Tasks
 		                IEnumerator ce = stack.Peek(); //without popping it.
 						
 		                if (ce.MoveNext() == false)
-						{
-							Debug.Log("Parallel Task " + i + " Done");
-		                    
 							stack.Pop(); //now it can be popped
-						}
 		                else //ok the iteration is not over
 						if (ce.Current != null && ce.Current != ce)
 						{
@@ -69,7 +67,7 @@ namespace Tasks
 				}
 			}
 			
-			Debug.Log("Parallel Tasks Ended");
+			Debug.Log("All Parallel Tasks Ended");
 			
 			isRunning = false;
 			
