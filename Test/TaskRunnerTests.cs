@@ -23,6 +23,8 @@ namespace Test
 			iterable1 = new Enumerable(15);
 			iterable2 = new Enumerable(5);
 			
+			iterations = 0;
+			
 			_taskRunner = TaskRunner.Instance;
 		}
 		
@@ -241,6 +243,14 @@ namespace Test
 			Assert.That (allDone == true);
 		}
 		
+		[Test]
+		public void TestSerialTasksExecutedInParallelWithEnumFunction ()
+		{
+			_taskRunner.RunSync (EnumerableFunction());
+
+			Assert.That (iterations == 10);
+		}
+		
         #region TaskImplementation
 
 		class Task : ITask
@@ -318,6 +328,8 @@ namespace Test
 		Enumerable iterable1;
 		Enumerable iterable2;
 		
+		int	iterations;
+		
         #endregion
 		
 		#region Helper functions
@@ -336,6 +348,16 @@ namespace Test
 			parallelTasks1.Add (task2);
 			
 			_taskRunner.RunSync (parallelTasks1);
+		}
+		
+		IEnumerable EnumerableFunction ()
+		{
+			while (iterations < 10)
+			{
+				iterations++;
+					
+				yield return null;
+			}
 		}
 		
 		#endregion		
