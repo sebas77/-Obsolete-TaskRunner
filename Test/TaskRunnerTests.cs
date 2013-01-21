@@ -4,6 +4,9 @@ using Tasks;
 using NUnit.Framework;
 #endregion
 
+//Note: RunSync is used only for testing purposes
+//Real scenarios should use Run or RunManaged
+
 namespace Test
 {
 	[TestFixture]

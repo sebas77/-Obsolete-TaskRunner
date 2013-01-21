@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TaskRunner
 {
-	private MonoBehaviour _runner;
+	private MonoTask _runner;
 	
 	static private TaskRunner _instance;
 		
@@ -11,7 +11,8 @@ public class TaskRunner
 	{
 		get 
 		{
-			InitInstance ();
+			if (_instance == null)
+				InitInstance ();
 			
 			return _instance;
 		}
@@ -41,28 +42,64 @@ public class TaskRunner
 		while (task.MoveNext() == true);
 	}
 	
+	public void RunManaged(IEnumerable task)
+	{
+		RunManaged(task.GetEnumerator());
+	}
+	
+	public void RunManaged(IEnumerator task)
+	{
+		if (_runner != null && _runner.enabled == true)
+		{
+			_runner.gameObject.active = true;
+			_runner.StartCoroutineManaged(task);
+		}
+	}
+	
+	public void PauseManaged()
+	{
+		_runner.paused = true;
+	}
+	
+	public void ResumeManaged()
+	{
+		_runner.paused = false;
+	}
+	
 	public void Stop()
 	{
 		if (_runner != null)
 			_runner.StopAllCoroutines();
 	}
 	
+	public void Destroy()
+	{
+		Stop();
+		
+		if (_runner != null)
+		{
+			if (Application.isPlaying)
+				GameObject.Destroy(_runner.gameObject);
+			else
+				GameObject.DestroyImmediate(_runner.gameObject);
+		}
+				
+		_instance = null;
+	}
+	
 	static void InitInstance ()
 	{
-		if (_instance == null)
+		GameObject go = GameObject.Find("TaskRunner");
+			
+		if (go == null)
 		{
-			GameObject go = GameObject.Find("TaskRunner");
-			
-			if (go == null)
-			{
-				go = new GameObject("TaskRunner");
+			go = new GameObject("TaskRunner");
 				
-				GameObject.DontDestroyOnLoad(go);
-			}
-			
-			_instance = new TaskRunner();
-			_instance._runner = go.AddComponent<MonoBehaviour>();
+			GameObject.DontDestroyOnLoad(go);
 		}
+			
+		_instance = new TaskRunner();
+		_instance._runner = go.AddComponent<MonoTask>();
 	}
 }
 	

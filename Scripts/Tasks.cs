@@ -9,7 +9,7 @@ namespace Tasks
 	{
 		protected List<IEnumerator> 	registeredEnumerators { get; private set; }
 
-		public bool						isRunning { protected set; get; }
+		public bool						isRunning 		{ protected set; get; }
 		public int						registeredTasks { get { return registeredEnumerators.Count; } }
 		
 		public Tasks()
