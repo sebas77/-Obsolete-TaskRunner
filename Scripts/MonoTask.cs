@@ -1,33 +1,28 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Tasks;
 
 class MonoTask:MonoBehaviour
 {
-	IEnumerator _enumerator;
+	List<IEnumerator> _enumerators;
 	
 	public bool paused { set; private get; }
 	
 	void Awake()
 	{
+		_enumerators = new List<IEnumerator>();
 		paused = false;	
 	}
 
 	public void StartCoroutineManaged(IEnumerator task)
 	{
-		SingleTask tasks = new SingleTask(task);
-		
-		_enumerator = tasks.GetEnumerator();
+		_enumerators.Add(new SingleTask(task).GetEnumerator());
 	}
 
 	void FixedUpdate()
 	{
 		if (paused == false)
-		{
-			if (_enumerator != null && _enumerator.MoveNext() == false)
-			{
-				_enumerator = null;
-			}
-		}
+			_enumerators.RemoveAll(enumerator => enumerator.MoveNext() == false);
 	}
 }
