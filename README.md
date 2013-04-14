@@ -3,8 +3,7 @@ TaskRunner for Unity3D
 
 Runs Asynchronous tasks in Parallel and Serial. More information here: http://blog.sebaslab.com/run-serial-parallel-asynchronous-tasks-unity3d-c/
 
-Just copy the files in your Asset folder and use the scene included.
-The tests take several seconds to run.
+Just copy the files in your Asset folder and use the scene included to test the code.
 
 Copyright (c) 2012 Sebastiano Mandalà
 
