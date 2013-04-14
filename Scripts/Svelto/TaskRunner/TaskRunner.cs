@@ -27,7 +27,11 @@ public class TaskRunner
 	{
 		if (_runner != null && _runner.enabled == true)
 		{
+#if UNITY_4_0			
+			_runner.gameObject.SetActive(true);
+#else
 			_runner.gameObject.active = true;
+#endif			
 			_runner.StartCoroutine(task);
 		}
 	}
@@ -51,7 +55,11 @@ public class TaskRunner
 	{
 		if (_runner != null && _runner.enabled == true)
 		{
+#if UNITY_4_0			
+			_runner.gameObject.SetActive(true);
+#else
 			_runner.gameObject.active = true;
+#endif
 			_runner.StartCoroutineManaged(task);
 		}
 	}

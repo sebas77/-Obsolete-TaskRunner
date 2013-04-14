@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Tasks
+namespace Svelto.Tasks
 {
 	public class EnumerableTask: IEnumerable
 	{

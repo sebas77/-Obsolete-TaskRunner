@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
-namespace Tasks
+namespace Svelto.Tasks
 {
 	public class ParallelTasks: Tasks
     {

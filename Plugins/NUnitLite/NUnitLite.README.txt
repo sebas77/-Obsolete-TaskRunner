@@ -6,7 +6,7 @@ This file provides basic information about NUnitLite. For more info see the NUni
 
 COPYRIGHT AND LICENSE
 
-NUnitLite is Copyright © 2009, Charlie Poole and is licensed under the MIT license.
+NUnitLite is Copyright ï¿½ 2009, Charlie Poole and is licensed under the MIT license.
 
 A copy of the license is distributed with the program in the file LICENSE.txt and is also available at http://www.opensource.org/licenses/mit-license.php.
 
@@ -104,5 +104,5 @@ NUnitLite is not "installed" in your system. Instead, you should make the NUnitL
 
 In either case, your tests should be created in an exe project, which is run in order to execute them. If the NUnitLite files are included in the project, the Main program will locate your tests automatically and execute them. If you place NUnitLite in a separate assembly, you will need to create a small stub that starts NUnitLite. For an example of how to do this, take a look at NUnitLite's own tests.
 
-NUnitLite uses the NUnit.Framework namespace, which allows relatively easy portability between NUnit and NUnitLite. Test assemblies built using NUnitLite may be opened using NUnit version 2.4 or later, provided that all tests are identified using attributes rather than inheritance.
+NUnitLite uses the NUnit.Svelto namespace, which allows relatively easy portability between NUnit and NUnitLite. Test assemblies built using NUnitLite may be opened using NUnit version 2.4 or later, provided that all tests are identified using attributes rather than inheritance.
 

@@ -1,6 +1,6 @@
 #region Usings
 using System.Collections;
-using Tasks;
+using Svelto.Tasks;
 using NUnit.Framework;
 #endregion
 

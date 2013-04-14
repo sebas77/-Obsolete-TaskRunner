@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
-namespace Tasks
+namespace Svelto.Tasks
 {
-	public class SerialTasks: Tasks
+	public class SingleTask: IEnumerable
 	{
 		class WWWEnumerator:IEnumerator
 		{
@@ -28,26 +28,25 @@ namespace Tasks
 				
 			}
 		}
+		
+		private IEnumerator 		_enumerator;
 	
 		public event Action			onComplete;
 		 
-		public SerialTasks():base()
-		{}
-		
-		override public IEnumerator GetEnumerator()
+		public SingleTask(IEnumerator enumerator):base()
 		{
-			isRunning = true;
-			
-			Debug.Log("Serialized Tasks Started, number of tasks: " + registeredEnumerators.Count);
-			
-			while (registeredEnumerators.Count > 0) 
+			_enumerator = enumerator;
+		}
+		
+		public IEnumerator GetEnumerator()
+		{
+			if (_enumerator != null)
 			{
-				//create a new stack for each task
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
-				//let`s get the first available task
-				IEnumerator task = registeredEnumerators[0];
-				//put in the stack
-				stack.Push (task);
+				
+				IEnumerator task = _enumerator;
+				
+				stack.Push(task);
 				
 				while (stack.Count > 0) 
 				{
@@ -56,7 +55,7 @@ namespace Tasks
 					if (ce.MoveNext() == false) 
 						stack.Pop(); //task is done (the iteration is over)
 					else 
-					if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
+					if (ce.Current != ce && ce.Current != null) 
 					{	
 						if (ce.Current is IEnumerable)	
 							stack.Push(((IEnumerable)ce.Current).GetEnumerator());
@@ -68,18 +67,11 @@ namespace Tasks
 							stack.Push(new WWWEnumerator(ce.Current as WWW));
 					}
 					
-					if (ce is ParallelTasks) //a set of parallel tasks is due to start
-						Debug.Log ("New Set of Parallel Tasks Started from SerialTasks");
-	 				
 					yield return null; //the tasks are not done yet
 				} 
 				
-				registeredEnumerators.RemoveAt(0); //task done, move to the next one if any
+				_enumerator = null;
 			}
-			
-			isRunning = false;
-			
-			Debug.Log ("All Serialized Tasks Ended");
 			
 			if (onComplete != null)
 				onComplete();

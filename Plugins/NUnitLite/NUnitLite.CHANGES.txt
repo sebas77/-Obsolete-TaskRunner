@@ -91,7 +91,7 @@ Bug fixes:
 
 * Fixed incorrect preprocessor constants (12361, 12411)
 * Fixed StackFilter to use correct namespace (12372)
-* Expected Exception is now handled corretly on Compact Framework (1446)
+* Expected Exception is now handled corretly on Compact Svelto (1446)
 
 ----------------------------------------------------------------------------
 NUnitLite Version 0.1 - August 20, 2007

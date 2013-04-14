@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Tasks
+namespace Svelto.Tasks
 {
 	abstract public class Tasks: IEnumerable
 	{

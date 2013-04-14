@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 
-namespace Tasks
+namespace Svelto.Tasks
 {
 	/*
 	 * ITask is the interface of a generic Task
