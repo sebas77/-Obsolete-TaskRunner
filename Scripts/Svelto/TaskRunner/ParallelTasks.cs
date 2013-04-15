@@ -3,6 +3,27 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
+public class WWWEnumerator:IEnumerator
+{
+	WWW _www;
+
+	public WWWEnumerator(WWW www)
+	{
+		_www = www;
+	}
+
+	public object Current	{ get { return _www; }}
+	
+	public bool MoveNext ()
+	{
+		return _www.isDone == false;
+	}
+	
+	public void Reset ()
+	{
+	}
+}
+
 namespace Svelto.Tasks
 {
 	public class ParallelTasks: Tasks
@@ -55,9 +76,12 @@ namespace Svelto.Tasks
 							else
 							if (ce.Current is IEnumerator)	//what we got from the enumeration is an IEnumerator?
 								stack.Push(ce.Current as IEnumerator);
+							else
+							if (ce.Current is WWW)
+								stack.Push(new WWWEnumerator(ce.Current as WWW));
+							if (ce.Current is YieldInstruction)
+								yield return ce.Current; //be careful, this cannot be executed in parallel. A yield instruction will pause all the other tasks!
 						}
-		 				
-						yield return null;
 		            }
 					else
 					{
@@ -65,6 +89,8 @@ namespace Svelto.Tasks
 						i--;
 					}
 				}
+				
+				yield return null;
 			}
 			
 			Debug.Log("All Parallel Tasks Ended");

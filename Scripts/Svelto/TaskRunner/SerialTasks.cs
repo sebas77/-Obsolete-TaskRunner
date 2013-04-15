@@ -3,28 +3,6 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
-public class WWWEnumerator:IEnumerator
-{
-	WWW _www;
-
-	public WWWEnumerator(WWW www)
-	{
-		_www = www;
-	}
-
-	public object Current	{ get { return _www; }}
-	
-	public bool MoveNext ()
-	{
-		return _www.isDone == false;
-	}
-	
-	public void Reset ()
-	{
-		
-	}
-}
-
 namespace Svelto.Tasks
 {
 	public class SerialTasks: Tasks
@@ -59,13 +37,13 @@ namespace Svelto.Tasks
 					if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
 					{	
 						if (ce.Current is IEnumerable)	
-							stack.Push(((IEnumerable)ce.Current).GetEnumerator());
+							stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
 						else 
 						if (ce.Current is IEnumerator)	
-							stack.Push(ce.Current as IEnumerator);
+							stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
 						else
-						if (ce.Current is WWW)
-							stack.Push(new WWWEnumerator(ce.Current as WWW));
+						if (ce.Current is WWW || ce.Current is YieldInstruction) //we assume that these cannot ever yield an IEnumerator
+							yield return ce.Current;
 					}
 					
 					if (ce is ParallelTasks) //a set of parallel tasks is due to start

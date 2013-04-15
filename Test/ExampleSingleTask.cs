@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Svelto.Tasks;
 
-public class Example : MonoBehaviour 
+public class ExampleSingleTask : MonoBehaviour 
 {
 	int i;
 	

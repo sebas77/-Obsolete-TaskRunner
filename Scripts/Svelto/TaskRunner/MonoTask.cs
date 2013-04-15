@@ -21,7 +21,7 @@ class MonoTask : MonoBehaviour
 		_enumerators.Add(new SingleTask(task));
 	}
 
-	void FixedUpdate()
+	void Update()
 	{
 		if (paused == false)
 			_enumerators.RemoveAll(enumerator => enumerator.MoveNext() == false);
