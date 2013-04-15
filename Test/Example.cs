@@ -13,7 +13,8 @@ public class Example : MonoBehaviour
 	{
 		StartCoroutine(DoSomethingAsynchonously());
 		
-		TaskRunner.Instance.Run(new SingleTask(DoSomethingAsynchonously()));
+		//TaskRunner.Instance.Run(new SingleTask(DoSomethingAsynchonously())); //use this if you are not in a monobehaviour
+		StartCoroutine(new SingleTask(DoSomethingAsynchonously()));
 	}
 	
 	IEnumerator DoSomethingAsynchonously()

@@ -18,7 +18,7 @@ class MonoTask : MonoBehaviour
 
 	public void StartCoroutineManaged(IEnumerator task)
 	{
-		_enumerators.Add(new SingleTask(task).GetEnumerator());
+		_enumerators.Add(new SingleTask(task));
 	}
 
 	void FixedUpdate()

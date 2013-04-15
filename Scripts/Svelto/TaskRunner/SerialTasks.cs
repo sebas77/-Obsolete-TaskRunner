@@ -3,32 +3,32 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 
+public class WWWEnumerator:IEnumerator
+{
+	WWW _www;
+
+	public WWWEnumerator(WWW www)
+	{
+		_www = www;
+	}
+
+	public object Current	{ get { return _www; }}
+	
+	public bool MoveNext ()
+	{
+		return _www.isDone == false;
+	}
+	
+	public void Reset ()
+	{
+		
+	}
+}
+
 namespace Svelto.Tasks
 {
 	public class SerialTasks: Tasks
 	{
-		class WWWEnumerator:IEnumerator
-		{
-			WWW _www;
-		
-			public WWWEnumerator(WWW www)
-			{
-				_www = www;
-			}
-		
-			public object Current	{ get { return _www; }}
-			
-			public bool MoveNext ()
-			{
-				return _www.isDone == false;
-			}
-			
-			public void Reset ()
-			{
-				
-			}
-		}
-	
 		public event Action			onComplete;
 		 
 		public SerialTasks():base()
