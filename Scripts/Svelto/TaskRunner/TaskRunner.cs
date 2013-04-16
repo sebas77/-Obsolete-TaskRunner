@@ -27,7 +27,7 @@ public class TaskRunner
 	{
 		if (_runner != null && _runner.enabled == true)
 		{
-#if UNITY_4_0			
+#if UNITY_4_0 || UNITY_4_1
 			_runner.gameObject.SetActive(true);
 #else
 			_runner.gameObject.active = true;
@@ -55,7 +55,7 @@ public class TaskRunner
 	{
 		if (_runner != null && _runner.enabled == true)
 		{
-#if UNITY_4_0			
+#if UNITY_4_0 || UNITY_4_1			
 			_runner.gameObject.SetActive(true);
 #else
 			_runner.gameObject.active = true;
