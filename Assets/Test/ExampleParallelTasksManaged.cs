@@ -41,13 +41,13 @@ public class ExampleParallelTasksManaged : MonoBehaviour
 		{
 			if (_paused == false)
 			{
-				Debug.LogError("Paused!");
+				Debug.LogWarning("Paused!");
 				TaskRunner.Instance.PauseManaged();
 				_paused = true;
 			}
 			else
 			{
-				Debug.LogError("Resumed!");
+				Debug.LogWarning("Resumed!");
 				_paused = false;
 				TaskRunner.Instance.ResumeManaged();
 			}
