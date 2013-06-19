@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using Svelto.Tasks;
 
 public class TaskRunner
 {
@@ -53,15 +54,7 @@ public class TaskRunner
 	
 	public void RunManaged(IEnumerator task)
 	{
-		if (_runner != null && _runner.enabled == true)
-		{
-#if UNITY_4_0 || UNITY_4_1			
-			_runner.gameObject.SetActive(true);
-#else
-			_runner.gameObject.active = true;
-#endif
-			_runner.StartCoroutineManaged(task);
-		}
+		Run(new PausableTask(task, _runner));
 	}
 	
 	public void PauseManaged()

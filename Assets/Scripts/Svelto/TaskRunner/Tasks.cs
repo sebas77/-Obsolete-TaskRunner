@@ -22,7 +22,7 @@ namespace Svelto.Tasks
 			if (task == null)
 				throw new ArgumentNullException();
 			
-			Add(new EnumerableTask(task));
+			Add(new AsyncTask(task));
 		}
 		
 		public void Add(IEnumerable enumerable)

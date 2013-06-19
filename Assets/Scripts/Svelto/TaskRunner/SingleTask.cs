@@ -15,18 +15,18 @@ namespace Svelto.Tasks
 			_enumerator = task.GetEnumerator();
 		}
 		
-		public SingleTask(IEnumerator enumerator, System.Action OnComplete)
+		public SingleTask(IEnumerator enumerator, System.Action onComplete)
 		{
 			SerialTasks task = new SerialTasks();
 			
 			task.Add(enumerator);
 			
-			task.onComplete += OnComplete;
+			task.onComplete += onComplete;
 			
 			_enumerator = task.GetEnumerator();
 		}
 		
-		public bool MoveNext()
+		virtual public bool MoveNext()
 		{
 			return _enumerator.MoveNext();
 		}
