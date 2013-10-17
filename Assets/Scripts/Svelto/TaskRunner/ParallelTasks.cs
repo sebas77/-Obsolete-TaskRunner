@@ -79,6 +79,7 @@ namespace Svelto.Tasks
 							else
 							if (ce.Current is WWW)
 								stack.Push(new WWWEnumerator(ce.Current as WWW));
+							else
 							if (ce.Current is YieldInstruction)
 								yield return ce.Current; //be careful, this cannot be executed in parallel. A yield instruction will pause all the other tasks!
 						}

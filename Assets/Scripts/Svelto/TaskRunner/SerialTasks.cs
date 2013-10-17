@@ -8,9 +8,14 @@ namespace Svelto.Tasks
 	public class SerialTasks: Tasks
 	{
 		public event Action			onComplete;
+		
+		public 	float progress { get { return _progress + _subProgress;} }
 		 
 		public SerialTasks():base()
-		{}
+		{
+			_progress = 0.0f;
+			_subProgress = 0.0f;
+		}
 		
 		override public IEnumerator GetEnumerator()
 		{
@@ -32,18 +37,30 @@ namespace Svelto.Tasks
 					IEnumerator ce = stack.Peek(); //get the current task to execute
 	             
 					if (ce.MoveNext() == false) 
+					{
+						_progress = 100.0f / registeredEnumerators.Count;
+						_subProgress = 0;
 						stack.Pop(); //task is done (the iteration is over)
+					}
 					else 
-					if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
-					{	
-						if (ce.Current is IEnumerable)	
-							stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
-						else 
-						if (ce.Current is IEnumerator)	
-							stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
-						else
-						if (ce.Current is WWW || ce.Current is YieldInstruction) //we assume that these cannot ever yield an IEnumerator
-							yield return ce.Current;
+					{
+						if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
+						{	
+							if (ce.Current is IEnumerable)	
+								stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
+							else 
+							if (ce.Current is IEnumerator)	
+								stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
+							else
+							if (ce.Current is WWW)
+								stack.Push(new WWWEnumerator(ce.Current as WWW));
+							else
+							if (ce.Current is YieldInstruction)
+								yield return ce.Current; 
+						}
+						
+						if (ce.Current is ITask)
+							_subProgress += (ce.Current as ITask).progress / registeredEnumerators.Count;
 					}
 					
 					if (ce is ParallelTasks) //a set of parallel tasks is due to start
@@ -62,6 +79,9 @@ namespace Svelto.Tasks
 			if (onComplete != null)
 				onComplete();
 		}
+		
+		private float _progress;
+		private float _subProgress;
 	}
 }
 

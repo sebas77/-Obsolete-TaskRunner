@@ -260,11 +260,13 @@ namespace Test
 		{
 			public event System.Action onComplete;
 			
-			public bool isDone { get; private set; }
+			public bool  isDone { get; private set; }
+			public float progress { get; private set; }
 			
 			public Task(int niterations)
 			{
 				isDone = false;
+				progress = 0.0f;
 			}
 
 			public void Execute()
@@ -272,6 +274,7 @@ namespace Test
 				//usually this is an async operation (like www)
 				//otherwise it would not make much sense :)
 				isDone = true;
+				progress = 1.0f;
 
 				if (onComplete != null)
 					onComplete();

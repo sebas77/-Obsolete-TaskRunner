@@ -1,5 +1,12 @@
 using System.Collections;
 
+/// <summary>
+/// Single Task
+///
+/// - This is a more powerful version of passing a single IEnumerator as parameter of TaskRunner.Run
+/// - The main difference is that a single task can execute other tasks returned by the single task
+/// </summary>
+
 namespace Svelto.Tasks
 {
 	public class SingleTask: IEnumerator

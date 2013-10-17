@@ -1,10 +1,9 @@
 using System.Collections;
-using UnityEngine;
 using Svelto.Tasks;
 
 public class TaskRunner
 {
-	private MonoTask _runner;
+	private IRunner _runner;
 	
 	static private TaskRunner _instance;
 		
@@ -26,15 +25,7 @@ public class TaskRunner
 	
 	public void Run(IEnumerator task)
 	{
-		if (_runner != null && _runner.enabled == true)
-		{
-#if UNITY_4_0 || UNITY_4_1
-			_runner.gameObject.SetActive(true);
-#else
-			_runner.gameObject.active = true;
-#endif			
-			_runner.StartCoroutine(task);
-		}
+		_runner.StartCoroutine(new SingleTask(task));
 	}
 	
 	public void RunSync(IEnumerable task)
@@ -44,17 +35,23 @@ public class TaskRunner
 	
 	public void RunSync(IEnumerator task)
 	{
-		while (task.MoveNext() == true);
+		IEnumerator taskToRun = new SingleTask(task);
+		
+		while (taskToRun.MoveNext() == true);
 	}
 	
-	public void RunManaged(IEnumerable task)
+	public TaskRoutine RunManaged(IEnumerable task)
 	{
-		RunManaged(task.GetEnumerator());
+		return RunManaged(task.GetEnumerator());
 	}
 	
-	public void RunManaged(IEnumerator task)
+	public TaskRoutine RunManaged(IEnumerator task)
 	{
-		Run(new PausableTask(task, _runner));
+		PausableTask ptask = new PausableTask(task, _runner); // a pausable task IS a single task
+		
+		Run(ptask);
+		
+		return new TaskRoutine(ptask);
 	}
 	
 	public void PauseManaged()
@@ -77,30 +74,15 @@ public class TaskRunner
 	{
 		Stop();
 		
-		if (_runner != null)
-		{
-			if (Application.isPlaying)
-				GameObject.Destroy(_runner.gameObject);
-			else
-				GameObject.DestroyImmediate(_runner.gameObject);
-		}
+		_runner.Destroy();
 				
 		_instance = null;
 	}
 	
 	static void InitInstance ()
 	{
-		GameObject go = GameObject.Find("TaskRunner");
-			
-		if (go == null)
-		{
-			go = new GameObject("TaskRunner");
-				
-			GameObject.DontDestroyOnLoad(go);
-		}
-			
 		_instance = new TaskRunner();
-		_instance._runner = go.AddComponent<MonoTask>();
+		_instance._runner = new MonoTask();
 	}
 }
 	

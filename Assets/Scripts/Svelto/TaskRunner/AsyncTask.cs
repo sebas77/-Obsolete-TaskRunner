@@ -27,7 +27,7 @@ namespace Svelto.Tasks
 			task.Execute(); 
 			
 			while (task.isDone == false)
-				yield return null;
+				yield return task;
 		}
 		
 		public override string ToString()

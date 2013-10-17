@@ -10,14 +10,15 @@ namespace Svelto.Tasks
 	 * A task can (and should) wrap an 
 	 * asynchronous call though, so it can
 	 * last over the time.
-	 * To check if a task isDone, the isDone
-	 * getter must be used.
+	 * once the task is completed, the isDone
+	 * value must be set to true.
 	 **/
 	public interface ITask
 	{
 		event 		Action	onComplete;
 		
 		bool		isDone { get; }
+		float		progress { get; }
 		
 		void		Execute ();	
 	}
