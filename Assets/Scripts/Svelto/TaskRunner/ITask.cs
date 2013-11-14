@@ -15,7 +15,7 @@ namespace Svelto.Tasks
 	 **/
 	public interface ITask
 	{
-		event 		Action	onComplete;
+		event 		Action<bool>	onComplete;
 		
 		bool		isDone { get; }
 		float		progress { get; }

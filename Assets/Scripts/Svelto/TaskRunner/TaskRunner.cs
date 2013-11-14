@@ -20,7 +20,7 @@ public class TaskRunner
 		
 	public void Run(IEnumerable task)
 	{
-		Run(task.GetEnumerator());
+		_runner.StartCoroutine(task.GetEnumerator());
 	}
 	
 	public void Run(IEnumerator task)
@@ -30,7 +30,9 @@ public class TaskRunner
 	
 	public void RunSync(IEnumerable task)
 	{
-		RunSync(task.GetEnumerator());
+		IEnumerator taskToRun = task.GetEnumerator();
+		
+		while (taskToRun.MoveNext() == true);
 	}
 	
 	public void RunSync(IEnumerator task)
@@ -47,9 +49,9 @@ public class TaskRunner
 	
 	public TaskRoutine RunManaged(IEnumerator task)
 	{
-		PausableTask ptask = new PausableTask(task, _runner); // a pausable task IS a single task
+		PausableTask ptask = new PausableTask(task, _runner);
 		
-		Run(ptask);
+		Run(ptask); //will transform it into a single task
 		
 		return new TaskRoutine(ptask);
 	}

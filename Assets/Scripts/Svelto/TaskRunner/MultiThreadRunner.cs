@@ -7,7 +7,18 @@ namespace Svelto.Tasks
     {
         public void StartCoroutine(IEnumerator task)
         {	//this is not a background thread, the executable won't stop until this is done, it should be a background
-            Thread oThread = new Thread(new ThreadStart(() => { while (task.MoveNext() == true); }));
+			SingleTask stask = new SingleTask(task);
+			
+            Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
+
+            oThread.Start();
+        }
+		
+		public void StartCoroutine(IEnumerable task)
+        {	//this is not a background thread, the executable won't stop until this is done, it should be a background
+			IEnumerator stask = task.GetEnumerator();
+			
+            Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
 
             oThread.Start();
         }

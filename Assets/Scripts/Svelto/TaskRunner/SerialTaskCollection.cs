@@ -5,13 +5,13 @@ using UnityEngine;
 
 namespace Svelto.Tasks
 {
-	public class SerialTasks: Tasks
+	public class SerialTaskCollection: TaskCollection
 	{
 		public event Action			onComplete;
 		
-		public 	float progress { get { return _progress + _subProgress;} }
+		override public 	float progress { get { return _progress + _subProgress;} }
 		 
-		public SerialTasks():base()
+		public SerialTaskCollection():base()
 		{
 			_progress = 0.0f;
 			_subProgress = 0.0f;
@@ -21,16 +21,16 @@ namespace Svelto.Tasks
 		{
 			isRunning = true;
 			
-			Debug.Log("Serialized Tasks Started, number of tasks: " + registeredEnumerators.Count);
+			int startingCount = registeredEnumerators.Count;
 			
 			while (registeredEnumerators.Count > 0) 
 			{
 				//create a new stack for each task
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
 				//let`s get the first available task
-				IEnumerator task = registeredEnumerators[0];
+				IEnumerator task = registeredEnumerators.Dequeue();
 				//put in the stack
-				stack.Push (task);
+				stack.Push(task);
 				
 				while (stack.Count > 0) 
 				{
@@ -38,8 +38,9 @@ namespace Svelto.Tasks
 	             
 					if (ce.MoveNext() == false) 
 					{
-						_progress = 100.0f / registeredEnumerators.Count;
+						_progress = (float)(startingCount - registeredEnumerators.Count) / (float)startingCount;
 						_subProgress = 0;
+						
 						stack.Pop(); //task is done (the iteration is over)
 					}
 					else 
@@ -56,25 +57,21 @@ namespace Svelto.Tasks
 								stack.Push(new WWWEnumerator(ce.Current as WWW));
 							else
 							if (ce.Current is YieldInstruction)
-								yield return ce.Current; 
+								yield return ce.Current; //YieldInstructions are special cases and must be handled by Unity. They cannot be wrapped!
 						}
 						
-						if (ce.Current is ITask)
-							_subProgress += (ce.Current as ITask).progress / registeredEnumerators.Count;
+						if (ce is AsyncTask) //asyn
+							_subProgress = (ce as AsyncTask).task.progress * (((float)(startingCount - (registeredEnumerators.Count)) / (float)startingCount) - progress);
+						
+						if (ce is EnumeratorWithProgress) //asyn
+							_subProgress = (ce as EnumeratorWithProgress).progress * (((float)(startingCount - (registeredEnumerators.Count)) / (float)startingCount) - progress);
 					}
 					
-					if (ce is ParallelTasks) //a set of parallel tasks is due to start
-						Debug.Log ("New Set of Parallel Tasks Started from SerialTasks");
-	 				
 					yield return null; //the tasks are not done yet
 				} 
-				
-				registeredEnumerators.RemoveAt(0); //task done, move to the next one if any
 			}
 			
 			isRunning = false;
-			
-			Debug.Log ("All Serialized Tasks Ended");
 			
 			if (onComplete != null)
 				onComplete();

@@ -13,8 +13,8 @@ public class ExampleParallelTasks : MonoBehaviour
 	{
 		Application.targetFrameRate = 20;
 		
-		ParallelTasks pt = new ParallelTasks();
-		SerialTasks	st = new SerialTasks();
+		ParallelTaskCollection pt = new ParallelTaskCollection();
+		SerialTaskCollection	st = new SerialTaskCollection();
 		
 		st.Add(Print("s1"));
 		st.Add(DoSomethingAsynchonously());

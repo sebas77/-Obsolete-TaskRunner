@@ -15,10 +15,10 @@ namespace Test
 		[SetUp]
 		public void Setup ()
 		{
-			serialTasks1 = new SerialTasks();
-			parallelTasks1 = new ParallelTasks();
-			serialTasks2 = new SerialTasks();
-			parallelTasks2 = new ParallelTasks();
+			serialTasks1 = new SerialTaskCollection();
+			parallelTasks1 = new ParallelTaskCollection();
+			serialTasks2 = new SerialTaskCollection();
+			parallelTasks2 = new ParallelTaskCollection();
 
 			task1 = new Task(15);
 			task2 = new Task(5);
@@ -96,7 +96,7 @@ namespace Test
 		{
 			bool test1Done = false;
 
-			task1.onComplete += () => {
+			task1.onComplete += (b) => {
 				test1Done = true; };
 			
 			task1.Execute();
@@ -123,8 +123,8 @@ namespace Test
 		{
 			bool test1Done = false;
 			
-			task1.onComplete += () => {	test1Done = true; };
-			task2.onComplete += () => { Assert.That (test1Done == true); };
+			task1.onComplete += (b) => {	test1Done = true; };
+			task2.onComplete += (b) => { Assert.That (test1Done == true); };
 			
 			SetupAndRunSerialTasks();
 		}
@@ -258,7 +258,7 @@ namespace Test
 
 		class Task : ITask
 		{
-			public event System.Action onComplete;
+			public event System.Action<bool> onComplete;
 			
 			public bool  isDone { get; private set; }
 			public float progress { get; private set; }
@@ -277,7 +277,7 @@ namespace Test
 				progress = 1.0f;
 
 				if (onComplete != null)
-					onComplete();
+					onComplete(true);
 			}
 		}
 
@@ -323,10 +323,10 @@ namespace Test
 		
 		TaskRunner _taskRunner;
 		
-		SerialTasks serialTasks1;
-		SerialTasks serialTasks2;
-		ParallelTasks parallelTasks1;
-		ParallelTasks parallelTasks2;
+		SerialTaskCollection serialTasks1;
+		SerialTaskCollection serialTasks2;
+		ParallelTaskCollection parallelTasks1;
+		ParallelTaskCollection parallelTasks2;
 
 		Task task1;
 		Task task2;

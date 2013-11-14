@@ -26,13 +26,15 @@ public class WWWEnumerator:IEnumerator
 
 namespace Svelto.Tasks
 {
-	public class ParallelTasks: Tasks
+	public class ParallelTaskCollection: TaskCollection
     {
         public event Action		onComplete;
 		
 		private List<Stack<IEnumerator>> listOfStacks;
+		
+		override public 	float progress { get { return _progress;} }
  
-        public ParallelTasks():base()
+        public ParallelTaskCollection():base()
         {
 			listOfStacks = new List<Stack<IEnumerator>>();
 		}
@@ -43,6 +45,8 @@ namespace Svelto.Tasks
 			
 			listOfStacks.Clear();
 			
+			int leftCount;
+			
 			foreach (IEnumerator enumerator in registeredEnumerators)
             {
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
@@ -52,10 +56,8 @@ namespace Svelto.Tasks
 				listOfStacks.Add(stack);
 			}
 			
-			registeredEnumerators.Clear();
+			leftCount = registeredEnumerators.Count;
 			
-			Debug.Log("Parallel Tasks Started, number of tasks: " + listOfStacks.Count);
-				
 			while (listOfStacks.Count > 0)
 			{
 				for (int i = 0; i < listOfStacks.Count; ++i)
@@ -67,7 +69,13 @@ namespace Svelto.Tasks
 		                IEnumerator ce = stack.Peek(); //without popping it.
 						
 		                if (ce.MoveNext() == false)
+						{
+							_progress = (float)(registeredEnumerators.Count - leftCount) / (float)registeredEnumerators.Count;
+														
+							leftCount--;
+							
 							stack.Pop(); //now it can be popped
+						}
 		                else //ok the iteration is not over
 						if (ce.Current != null && ce.Current != ce)
 						{
@@ -81,12 +89,13 @@ namespace Svelto.Tasks
 								stack.Push(new WWWEnumerator(ce.Current as WWW));
 							else
 							if (ce.Current is YieldInstruction)
-								yield return ce.Current; //be careful, this cannot be executed in parallel. A yield instruction will pause all the other tasks!
+								yield return ce.Current; //YieldInstructions are special cases and must be handled by Unity. They cannot be wrapped and pushed into a stack and it will pause a parallel execution
 						}
 		            }
 					else
 					{
-						listOfStacks.RemoveAt(i);
+						listOfStacks[i] = listOfStacks[listOfStacks.Count - 1];
+						listOfStacks.RemoveAt(listOfStacks.Count - 1);
 						i--;
 					}
 				}
@@ -94,12 +103,14 @@ namespace Svelto.Tasks
 				yield return null;
 			}
 			
-			Debug.Log("All Parallel Tasks Ended");
+			registeredEnumerators.Clear();
 			
 			isRunning = false;
 			
 			if (onComplete != null)
 				onComplete();
         }
+		
+		private float _progress;
     }
 }

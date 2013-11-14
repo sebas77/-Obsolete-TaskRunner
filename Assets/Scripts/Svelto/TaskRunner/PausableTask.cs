@@ -2,27 +2,31 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
-	internal class PausableTask: SingleTask
+	internal class PausableTask: IEnumerator
 	{
-		public PausableTask(IEnumerator enumerator, IRunner runner):base(enumerator)
+		public object Current 		{ get { return _enumerator.Current; } }
+				 
+		public PausableTask(IEnumerator enumerator, IRunner runner)
 		{
+			_enumerator = enumerator;
+			
 			_runner = runner;
 		}
 		
-		public PausableTask(IEnumerator enumerator, System.Action onComplete, MonoTask runner):base(enumerator, onComplete)
-		{
-			_runner = runner;
-		}
-		
-		override public bool MoveNext()
+		public bool MoveNext()
 		{
 			if (_stopped)
 				return false;
 			
 			if (_runner.paused == false)
-				return base.MoveNext();
+				return _enumerator.MoveNext();
 	
 			return true;
+		}
+		
+		public void Reset()
+		{
+			_enumerator.Reset();
 		}
 		
 		public void Stop()
@@ -30,8 +34,9 @@ namespace Svelto.Tasks
 			_stopped = true;
 		}
 		
-		IRunner _runner;
-		bool	_stopped = false;
+		IRunner 		_runner;
+		bool			_stopped = false;
+		IEnumerator 	_enumerator;
 	}
 }
 

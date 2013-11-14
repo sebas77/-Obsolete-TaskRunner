@@ -7,17 +7,28 @@ namespace Svelto.Tasks
 	{
 		public object Current 		{ get { return _enumerator.Current; } }
 				 
-		public TimingOutTask(float milliseconds, System.Action action)
+		public TimingOutTask(float milliseconds, System.Action action):this(milliseconds, action, false)
+		{}
+		
+		public TimingOutTask(float milliseconds, System.Action action, bool repeat)
 		{
-			_enumerator = Timeout(action, DateTime.Now.AddMilliseconds(milliseconds));
+			if (repeat == true)
+				action();
+			
+			_enumerator = Timeout(action, milliseconds, repeat);
 		}
 		
-		IEnumerator Timeout(System.Action action, DateTime endTime)
+		IEnumerator Timeout(System.Action action, float milliseconds, bool repeat)
 		{
+			DateTime endTime = DateTime.Now.AddMilliseconds(milliseconds);
+				
 			while (DateTime.Now < endTime)
 				yield return null;
 			
 			action();
+			
+			if (repeat == true)
+				yield return Timeout(action, milliseconds, true);
 		}
 		
 		virtual public bool MoveNext()

@@ -11,7 +11,7 @@ public class ExampleSerialTasks : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		SerialTasks st = new SerialTasks();
+		SerialTaskCollection st = new SerialTaskCollection();
 		
 		st.Add(Print(1));
 		st.Add(Print(2));

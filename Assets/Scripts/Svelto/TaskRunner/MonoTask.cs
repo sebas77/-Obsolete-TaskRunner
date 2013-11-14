@@ -35,7 +35,7 @@ namespace Svelto.Tasks
 		
 		public void StartCoroutine(IEnumerator task)
 		{
-	#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2
+	#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3
 			_component.gameObject.SetActive(true);
 	#else
 			_runner.gameObject.active = true;
