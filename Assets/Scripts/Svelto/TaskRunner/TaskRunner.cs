@@ -51,7 +51,7 @@ public class TaskRunner
 	{
 		PausableTask ptask = new PausableTask(task, _runner);
 		
-		Run(ptask); //will transform it into a single task
+		_runner.StartCoroutine(ptask); //ptask uses a single task internally
 		
 		return new TaskRoutine(ptask);
 	}

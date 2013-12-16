@@ -8,7 +8,7 @@ namespace Svelto.Tasks
 				 
 		public PausableTask(IEnumerator enumerator, IRunner runner)
 		{
-			_enumerator = enumerator;
+			_enumerator = new SingleTask(enumerator); //SingleTask is needed to be able to pause sub tasks
 			
 			_runner = runner;
 		}
