@@ -11,6 +11,7 @@ namespace Svelto.Tasks
 			
             Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
 
+			oThread.IsBackground = true;
             oThread.Start();
         }
 		
@@ -20,6 +21,7 @@ namespace Svelto.Tasks
 			
             Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
 
+			oThread.IsBackground = true;
             oThread.Start();
         }
 

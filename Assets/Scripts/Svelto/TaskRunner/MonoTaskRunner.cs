@@ -3,13 +3,13 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
-	class MonoTask : IRunner
+	class MonoTaskRunner : IRunner
 	{
 		MonoTaskBehaviour _component;
 		
 		public bool paused { set; get; }
 		
-		public MonoTask()
+		public MonoTaskRunner()
 		{
 			GameObject go = GameObject.Find("TaskRunner");
 				
@@ -18,6 +18,8 @@ namespace Svelto.Tasks
 				go = new GameObject("TaskRunner");
 					
 				GameObject.DontDestroyOnLoad(go);
+
+				go.hideFlags = HideFlags.HideInHierarchy;
 			}
 			
 			if ((_component = go.GetComponent<MonoTaskBehaviour>()) == null)
@@ -35,16 +37,18 @@ namespace Svelto.Tasks
 		
 		public void StartCoroutine(IEnumerator task)
 		{
-	#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3
+			if (_component == null)
+				return;
+#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3
 			_component.gameObject.SetActive(true);
-	#else
+#else
 			_runner.gameObject.active = true;
-	#endif			
+#endif			
 			_component.enabled = true;
 				
 			_component.StartCoroutine(task);
 		}
-	
+
 		public void StopAllCoroutines()
 		{
 			_component.StopAllCoroutines();
@@ -52,10 +56,11 @@ namespace Svelto.Tasks
 		
 		public void Destroy()
 		{
-			if (Application.isPlaying)
+#if !UNITY_EDITOR
 				GameObject.Destroy(_component.gameObject);
-			else
+#else
 				GameObject.DestroyImmediate(_component.gameObject);
+#endif
 		}
 	}
 }

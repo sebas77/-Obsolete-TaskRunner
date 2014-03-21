@@ -8,6 +8,11 @@ namespace Svelto.Tasks
 		{
 			_task = task;
 		}
+
+		public void Start()
+		{
+			_task.Start();
+		}
 		
 		public void Stop()
 		{

@@ -28,6 +28,11 @@ namespace Svelto.Tasks
 		{
 			_enumerator.Reset();
 		}
+
+		public void Start()
+		{
+			_runner.StartCoroutine(this);
+		}
 		
 		public void Stop()
 		{

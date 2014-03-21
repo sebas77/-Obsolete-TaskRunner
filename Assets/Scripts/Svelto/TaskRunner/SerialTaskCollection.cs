@@ -47,17 +47,14 @@ namespace Svelto.Tasks
 					{
 						if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
 						{	
+							if (ce.Current is WWW || ce.Current is YieldInstruction)
+								yield return ce.Current; //YieldInstructions are special cases and must be handled by Unity. They cannot be wrapped!
+							else
 							if (ce.Current is IEnumerable)	
 								stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
 							else 
 							if (ce.Current is IEnumerator)	
 								stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
-							else
-							if (ce.Current is WWW)
-								stack.Push(new WWWEnumerator(ce.Current as WWW));
-							else
-							if (ce.Current is YieldInstruction)
-								yield return ce.Current; //YieldInstructions are special cases and must be handled by Unity. They cannot be wrapped!
 						}
 						
 						if (ce is AsyncTask) //asyn

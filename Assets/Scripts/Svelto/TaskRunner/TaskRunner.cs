@@ -46,12 +46,24 @@ public class TaskRunner
 	{
 		return RunManaged(task.GetEnumerator());
 	}
-	
+
 	public TaskRoutine RunManaged(IEnumerator task)
 	{
 		PausableTask ptask = new PausableTask(task, _runner);
 		
 		_runner.StartCoroutine(ptask); //ptask uses a single task internally
+		
+		return new TaskRoutine(ptask);
+	}
+
+	public TaskRoutine CreateTask(IEnumerable task)
+	{
+		return CreateTask(task.GetEnumerator());
+	}
+
+	public TaskRoutine CreateTask(IEnumerator task)
+	{
+		PausableTask ptask = new PausableTask(task, _runner);
 		
 		return new TaskRoutine(ptask);
 	}
@@ -84,7 +96,7 @@ public class TaskRunner
 	static void InitInstance ()
 	{
 		_instance = new TaskRunner();
-		_instance._runner = new MonoTask();
+		_instance._runner = new MonoTaskRunner();
 	}
 }
 	

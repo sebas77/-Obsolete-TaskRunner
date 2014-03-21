@@ -7,7 +7,7 @@ namespace Svelto.Tasks
 	{
 		public 	float progress { get { return _progressFunction();} }
 		
-		public object Current 		{ get { return _enumerator.Current; } }
+		public object Current { get { return _enumerator.Current; } }
 		
 		public EnumeratorWithProgress(IEnumerator enumerator, System.Func<float> progressFunction)
 		{
