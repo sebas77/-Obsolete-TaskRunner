@@ -19,12 +19,14 @@ namespace Svelto.Tasks
 			registeredEnumerators = new Queue<IEnumerator>();
 		}
 		
-		public void Add(ITask task)
+		public IAbstractTask Add(IAbstractTask task)
 		{
 			if (task == null)
 				throw new ArgumentNullException();
 			
 			Add(new AsyncTask(task));
+
+			return task;
 		}
 		
 		public void Add(IEnumerable enumerable)
@@ -32,7 +34,7 @@ namespace Svelto.Tasks
 			if (enumerable is TaskCollection)
 			{
 				registeredEnumerators.Enqueue(new EnumeratorWithProgress(enumerable.GetEnumerator(), 
-							() => { return (enumerable as TaskCollection).progress;}));
+													() => (enumerable as TaskCollection).progress));
 				
 				if ((enumerable as TaskCollection).registeredTasks == 0)
 					Debug.LogError("Avoid to Register zero size tasks");
@@ -42,8 +44,6 @@ namespace Svelto.Tasks
 					
 			if (enumerable == null)
 				throw new ArgumentNullException();
-			
-			
 		}
  
 		public void Add(IEnumerator enumerator)

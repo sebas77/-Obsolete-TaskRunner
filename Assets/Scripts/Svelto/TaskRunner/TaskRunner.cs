@@ -12,7 +12,7 @@ public class TaskRunner
 		get 
 		{
 			if (_instance == null)
-				InitInstance ();
+				InitInstance();
 			
 			return _instance;
 		}
@@ -20,49 +20,69 @@ public class TaskRunner
 		
 	public void Run(IEnumerable task)
 	{
-		_runner.StartCoroutine(task.GetEnumerator());
+		if (task == null)
+			return;
+
+		Run(task.GetEnumerator());
 	}
 	
 	public void Run(IEnumerator task)
 	{
-		_runner.StartCoroutine(new SingleTask(task));
+		if (task == null)
+			return;
+
+		_runner.StartCoroutine(task);
 	}
 	
 	public void RunSync(IEnumerable task)
 	{
-		IEnumerator taskToRun = task.GetEnumerator();
-		
-		while (taskToRun.MoveNext() == true);
+		if (task == null)
+			return;
+
+		RunSync(task.GetEnumerator());
 	}
 	
 	public void RunSync(IEnumerator task)
 	{
+		if (task == null)
+			return;
+
 		IEnumerator taskToRun = new SingleTask(task);
 		
 		while (taskToRun.MoveNext() == true);
 	}
 	
-	public TaskRoutine RunManaged(IEnumerable task)
+	public void RunManaged(IEnumerable task)
 	{
-		return RunManaged(task.GetEnumerator());
+		if (task == null)
+			return;
+
+		RunManaged(task.GetEnumerator());
 	}
 
-	public TaskRoutine RunManaged(IEnumerator task)
+	public void RunManaged(IEnumerator task)
 	{
-		PausableTask ptask = new PausableTask(task, _runner);
-		
-		_runner.StartCoroutine(ptask); //ptask uses a single task internally
-		
-		return new TaskRoutine(ptask);
+		ResumeManaged();
+
+		if (task == null)
+			return;
+
+		_runner.StartCoroutine(task); 
 	}
 
 	public TaskRoutine CreateTask(IEnumerable task)
 	{
+		if (task == null)
+			return null;
+
 		return CreateTask(task.GetEnumerator());
 	}
 
 	public TaskRoutine CreateTask(IEnumerator task)
 	{
+		if (task == null)
+			return null;
+
 		PausableTask ptask = new PausableTask(task, _runner);
 		
 		return new TaskRoutine(ptask);
@@ -84,19 +104,10 @@ public class TaskRunner
 			_runner.StopAllCoroutines();
 	}
 	
-	public void Destroy()
+	static void InitInstance()
 	{
-		Stop();
-		
-		_runner.Destroy();
-				
-		_instance = null;
-	}
-	
-	static void InitInstance ()
-	{
-		_instance = new TaskRunner();
-		_instance._runner = new MonoTaskRunner();
+		_instance 			= new TaskRunner();
+		_instance._runner 	= new MonoTaskRunner();
 	}
 }
 	

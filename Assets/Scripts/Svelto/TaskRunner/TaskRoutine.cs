@@ -18,6 +18,16 @@ namespace Svelto.Tasks
 		{
 			_task.Stop();
 		}
+
+		public void Pause()
+		{
+			_task.Pause();
+		}
+		
+		public void Resume()
+		{
+			_task.Resume();
+		}
 		
 		string 			_name;
 		PausableTask 	_task;

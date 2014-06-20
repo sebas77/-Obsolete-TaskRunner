@@ -3,64 +3,57 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
-	class MonoTaskRunner : IRunner
+	class MonoTaskRunner: IRunner
 	{
-		MonoTaskBehaviour _component;
-		
-		public bool paused { set; get; }
-		
-		public MonoTaskRunner()
-		{
-			GameObject go = GameObject.Find("TaskRunner");
+		MonoTaskBehaviour 	_component;
 				
-			if (go == null)
-			{
-				go = new GameObject("TaskRunner");
-					
-				GameObject.DontDestroyOnLoad(go);
+		public bool paused { set; get; }
+		public bool stopped { private set; get; }
+		
+		void Init()
+		{
+			GameObject go = new GameObject("TaskRunner");
 
-				go.hideFlags = HideFlags.HideInHierarchy;
-			}
-			
+			go.hideFlags = HideFlags.HideInHierarchy;
+
 			if ((_component = go.GetComponent<MonoTaskBehaviour>()) == null)
 				_component = go.AddComponent<MonoTaskBehaviour>();
-			
-			_component.onLevelWasLoaded = OnLevelWasLoaded;
-			
-			paused = false;	
+
+			paused = false;
+			stopped = false;
 		}
 		
-		void OnLevelWasLoaded () 
+		public void StartCoroutine(IEnumerable task)
 		{
-			StopAllCoroutines();
+			StartCoroutine(task.GetEnumerator());
 		}
 		
 		public void StartCoroutine(IEnumerator task)
 		{
-			if (_component == null)
-				return;
-#if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3
+			stopped = false;
+			paused = false;
+
+            if (_component == null)
+                if (MonoTaskBehaviour.isQuitting == false)
+					Init();
+                else
+                    return;
+
+			PausableTask stask;
+
+			if (task is PausableTask)
+				stask = task as PausableTask;
+			else
+				stask = new PausableTask(task, this); //ptask uses a single task internally
+
 			_component.gameObject.SetActive(true);
-#else
-			_runner.gameObject.active = true;
-#endif			
 			_component.enabled = true;
-				
-			_component.StartCoroutine(task);
+			_component.StartCoroutine(stask);
 		}
 
 		public void StopAllCoroutines()
 		{
-			_component.StopAllCoroutines();
-		}
-		
-		public void Destroy()
-		{
-#if !UNITY_EDITOR
-				GameObject.Destroy(_component.gameObject);
-#else
-				GameObject.DestroyImmediate(_component.gameObject);
-#endif
+			stopped = true;
 		}
 	}
 }

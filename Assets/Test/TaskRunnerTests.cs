@@ -96,8 +96,8 @@ namespace Test
 		{
 			bool test1Done = false;
 
-			task1.onComplete += (b) => {
-				test1Done = true; };
+			task1.OnComplete((b) => {
+				test1Done = true; });
 			
 			task1.Execute();
 			
@@ -123,8 +123,8 @@ namespace Test
 		{
 			bool test1Done = false;
 			
-			task1.onComplete += (b) => {	test1Done = true; };
-			task2.onComplete += (b) => { Assert.That (test1Done == true); };
+			task1.OnComplete((b) => {	test1Done = true; });
+			task2.OnComplete((b) => { Assert.That (test1Done == true); });
 			
 			SetupAndRunSerialTasks();
 		}
@@ -258,7 +258,14 @@ namespace Test
 
 		class Task : ITask
 		{
-			public event System.Action<bool> onComplete;
+			event System.Action<bool> _onComplete;
+
+			public IAbstractTask	OnComplete(System.Action<bool> action)
+			{
+				_onComplete += action;
+
+				return this;
+			}
 			
 			public bool  isDone { get; private set; }
 			public float progress { get; private set; }
@@ -276,8 +283,8 @@ namespace Test
 				isDone = true;
 				progress = 1.0f;
 
-				if (onComplete != null)
-					onComplete(true);
+				if (_onComplete != null)
+					_onComplete(true);
 			}
 		}
 

@@ -13,14 +13,22 @@ namespace Svelto.Tasks
 	 * once the task is completed, the isDone
 	 * value must be set to true.
 	 **/
-	public interface ITask
+	public interface IAbstractTask
 	{
-		event 		Action<bool>	onComplete;
+		IAbstractTask	OnComplete(System.Action<bool> action);
 		
-		bool		isDone { get; }
-		float		progress { get; }
-		
-		void		Execute ();	
+		bool			isDone { get; }
+		float			progress { get; }
+	}
+
+	public interface ITask:IAbstractTask
+	{
+		void		Execute();	
+	}
+
+	public interface ITaskChain:IAbstractTask
+	{
+		void		Execute(object token);	
 	}
 }
 

@@ -7,14 +7,24 @@ namespace Svelto.Tasks
 {
 	public class SerialTaskCollection: TaskCollection
 	{
-		public event Action			onComplete;
+		public event Action		onComplete;
 		
-		override public 	float progress { get { return _progress + _subProgress;} }
+		override public float 	progress { get { return _progress + _subProgress;} }
 		 
 		public SerialTaskCollection():base()
 		{
 			_progress = 0.0f;
 			_subProgress = 0.0f;
+
+			_token = null;
+		}
+
+		public SerialTaskCollection(object token):base()
+		{
+			_progress = 0.0f;
+			_subProgress = 0.0f;
+
+			_token = token;
 		}
 		
 		override public IEnumerator GetEnumerator()
@@ -31,16 +41,19 @@ namespace Svelto.Tasks
 				IEnumerator task = registeredEnumerators.Dequeue();
 				//put in the stack
 				stack.Push(task);
-				
+
 				while (stack.Count > 0) 
 				{
 					IEnumerator ce = stack.Peek(); //get the current task to execute
+
+					if (ce is AsyncTask)
+						(ce as AsyncTask).token = _token;
 	             
 					if (ce.MoveNext() == false) 
 					{
 						_progress = (float)(startingCount - registeredEnumerators.Count) / (float)startingCount;
 						_subProgress = 0;
-						
+
 						stack.Pop(); //task is done (the iteration is over)
 					}
 					else 
@@ -63,9 +76,9 @@ namespace Svelto.Tasks
 						if (ce is EnumeratorWithProgress) //asyn
 							_subProgress = (ce as EnumeratorWithProgress).progress * (((float)(startingCount - (registeredEnumerators.Count)) / (float)startingCount) - progress);
 					}
-					
-					yield return null; //the tasks are not done yet
-				} 
+
+                    yield return null; //the tasks are not done yet
+				}
 			}
 			
 			isRunning = false;
@@ -74,8 +87,9 @@ namespace Svelto.Tasks
 				onComplete();
 		}
 		
-		private float _progress;
-		private float _subProgress;
+		float 	_progress;
+		float 	_subProgress;
+		object	_token;
 	}
 }
 

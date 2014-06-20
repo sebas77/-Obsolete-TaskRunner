@@ -2,14 +2,18 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
-	public class AsyncTask: IEnumerable
+	public class AsyncTask: IEnumerator
 	{
-		public ITask task { get; private set; }
-			
-		public AsyncTask(ITask task)
+		public IAbstractTask 	task { get; private set; }
+		public object			token { set; private get; }
+					
+		public AsyncTask(IAbstractTask task)
 		{
 			this.task = task;
+			enumerator = Execute();
 		}
+
+		public object Current 		{ get { return this; } }
 		
 		/// <summary>
 		/// Gets the enumerator and execute the task
@@ -22,18 +26,36 @@ namespace Svelto.Tasks
 		/// <returns>
 		/// The enumerator.
 		/// </returns>
-		public IEnumerator GetEnumerator()
+
+		public bool MoveNext()
 		{
-			task.Execute(); 
+			return enumerator.MoveNext();
+		}
+
+		IEnumerator Execute()
+		{
+			if (task is ITask)
+				((ITask)task).Execute(); 
+			else
+			if (task is ITaskChain)
+				((ITaskChain)task).Execute(token); 
+			else
+				throw new System.Exception("not supported task " + task.ToString());
 			
 			while (task.isDone == false)
 				yield return task;
 		}
 		
+		public void Reset()
+		{
+		}
+
 		public override string ToString()
 		{
 			return task.ToString();
 		}
+
+		IEnumerator		enumerator;
 	}
 }
 

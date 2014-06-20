@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
-	internal class PausableTask: IEnumerator
+	public class PausableTask: IEnumerator
 	{
 		public object Current 		{ get { return _enumerator.Current; } }
 				 
@@ -12,13 +12,20 @@ namespace Svelto.Tasks
 			
 			_runner = runner;
 		}
+
+		public PausableTask(SingleTask enumerator, IRunner runner)
+		{
+			_enumerator = enumerator;
+
+			_runner = runner;
+		}
 		
 		public bool MoveNext()
 		{
-			if (_stopped)
+			if (_stopped || _runner.stopped)
 				return false;
 			
-			if (_runner.paused == false)
+			if (_runner.paused == false && _paused == false)
 				return _enumerator.MoveNext();
 	
 			return true;
@@ -33,15 +40,27 @@ namespace Svelto.Tasks
 		{
 			_runner.StartCoroutine(this);
 		}
+
+		public void Pause()
+		{
+			_paused = true;
+		}
+
+		public void Resume()
+		{
+			_paused = false;
+		}
 		
 		public void Stop()
 		{
 			_stopped = true;
+			_enumerator = null;
 		}
 		
 		IRunner 		_runner;
 		bool			_stopped = false;
 		IEnumerator 	_enumerator;
+		bool			_paused = false;
 	}
 }
 

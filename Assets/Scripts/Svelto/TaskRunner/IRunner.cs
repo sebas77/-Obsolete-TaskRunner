@@ -2,12 +2,13 @@
 
 namespace Svelto.Tasks
 {
-    interface IRunner
+	public interface IRunner
     {
-        void StartCoroutine(IEnumerator task);
-        void StopAllCoroutines();
-		void Destroy();
-		
-		bool paused { set; get; }
+		void	StartCoroutine(IEnumerator task);
+		void 	StartCoroutine(IEnumerable task);
+        void 	StopAllCoroutines();
+				
+		bool paused { get; set; }
+		bool stopped { get; }
     }
 }

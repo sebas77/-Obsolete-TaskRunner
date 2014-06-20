@@ -1,38 +1,57 @@
 ﻿using System.Collections;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace Svelto.Tasks
 {
-    class MultiThreadRunner: IRunner
+	public class MultiThreadRunner: IRunner
     {
-        public void StartCoroutine(IEnumerator task)
-        {	//this is not a background thread, the executable won't stop until this is done, it should be a background
-			SingleTask stask = new SingleTask(task);
-			
-            Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
+		public MultiThreadRunner()
+		{
+			paused = false;	
+			stopped = false;
+			_priority = ThreadPriority.Normal;
+		}
 
+		public MultiThreadRunner(ThreadPriority priority)
+		{
+			paused = false;	
+			stopped = false;
+			_priority = priority;
+		}
+
+		public void StartCoroutine(IEnumerator task)
+        {	
+			stopped = false;
+			paused = false;
+
+			PausableTask stask;
+
+			if (task is PausableTask)
+				stask = task as PausableTask;
+			else
+				stask = new PausableTask(task, this); //ptask uses a single task internally
+
+			Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
+			
 			oThread.IsBackground = true;
-            oThread.Start();
+			oThread.Priority = _priority;
+			oThread.Start();
         }
-		
-		public void StartCoroutine(IEnumerable task)
-        {	//this is not a background thread, the executable won't stop until this is done, it should be a background
-			IEnumerator stask = task.GetEnumerator();
-			
-            Thread oThread = new Thread(new ThreadStart(() => { while (stask.MoveNext() == true); }));
 
-			oThread.IsBackground = true;
-            oThread.Start();
+		public void StartCoroutine(IEnumerable task)
+        {
+			StartCoroutine(task.GetEnumerator());
         }
 
         public void StopAllCoroutines()
         {
+			stopped = true;
         }
 		
-		public void Destroy()
-		{
-		}
-		
 		public bool paused { set; get; }
+		public bool stopped { private set; get; }
+
+		ThreadPriority _priority;
     }
 }

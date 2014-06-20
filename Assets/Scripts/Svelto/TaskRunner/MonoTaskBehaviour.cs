@@ -3,14 +3,11 @@ using UnityEngine;
 
 public class MonoTaskBehaviour: MonoBehaviour
 {
-	public Action onLevelWasLoaded;
+	static public bool isQuitting = false;
 	
-	void OnLevelWasLoaded (int level) 
-	{
-		if (onLevelWasLoaded != null)
-		{
-			onLevelWasLoaded();
-		}
-	}
+	void OnApplicationQuit()
+    {
+        isQuitting = true;
+    }
 }
 
