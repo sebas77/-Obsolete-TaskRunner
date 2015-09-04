@@ -1,3 +1,5 @@
+using Svelto.Tasks.Internal;
+using System;
 using System.Collections;
 
 /// <summary>
@@ -15,23 +17,15 @@ namespace Svelto.Tasks
 				 
 		public SingleTask(IEnumerator enumerator)
 		{
-			if (enumerator is TaskCollection || enumerator is SingleTask)
-				_enumerator = enumerator;
-			else
-			{
-				_task = new SerialTaskCollection();
+			if (enumerator is SingleTask || enumerator is PausableTask || enumerator is AsyncTask)
+				throw new ArgumentException("Use of incompatible Enumerator, cannot be SingleTask/PausableTask/AsyncTask");
 			
-				_task.Add(enumerator);
+			_task = new SerialTaskCollection();
+			_task.Add(enumerator);
 			
-				_enumerator = _task.GetEnumerator();
-			}
-			
+			_enumerator = _task.GetEnumerator();
+						
 			_onComplete = null;
-		}
-		
-		public SingleTask(IEnumerator enumerator, System.Action onComplete):this(enumerator)
-		{
-			_onComplete = onComplete;
 		}
 		
 		public bool MoveNext()
@@ -47,13 +41,26 @@ namespace Svelto.Tasks
 		}
 		
 		public void Reset()
-		{
-			_enumerator.Reset();
-		}
-		
-		IEnumerator		_enumerator;
-		SerialTaskCollection		_task;
-		System.Action 	_onComplete;
+		{}
+
+        public void Reuse(IEnumerator enumerator)
+        {
+           if (enumerator is SingleTask)
+				_enumerator = enumerator;
+			else
+			{
+                _task.Reset();
+				_task.Add(enumerator);
+				_enumerator = _task.GetEnumerator();
+			}
+			
+			_onComplete = null;
+        }
+
+
+        IEnumerator		        _enumerator;
+        SerialTaskCollection	_task;
+		Action 	                _onComplete;
 	}
 }
 

@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using Svelto.Tasks.Internal;
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 using UnityEngine;
+#endif
 
 namespace Svelto.Tasks
 {
@@ -48,8 +51,8 @@ namespace Svelto.Tasks
 
 					if (ce is AsyncTask)
 						(ce as AsyncTask).token = _token;
-	             
-					if (ce.MoveNext() == false) 
+
+                    if (ce.MoveNext() == false) 
 					{
 						_progress = (float)(startingCount - registeredEnumerators.Count) / (float)startingCount;
 						_subProgress = 0;
@@ -60,27 +63,37 @@ namespace Svelto.Tasks
 					{
 						if (ce.Current != ce && ce.Current != null)  //the task returned a new IEnumerator (or IEnumerable)
 						{	
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 							if (ce.Current is WWW || ce.Current is YieldInstruction)
 								yield return ce.Current; //YieldInstructions are special cases and must be handled by Unity. They cannot be wrapped!
 							else
-							if (ce.Current is IEnumerable)	
-								stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
-							else 
-							if (ce.Current is IEnumerator)	
-								stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
+#endif
+                                if (ce.Current is IEnumerable)
+                                {
+                                    stack.Push(((IEnumerable)ce.Current).GetEnumerator()); //it's pushed because it can yield another IEnumerator on its own
+                                    //push(subprogress);
+                                }
+                                else
+                                    if (ce.Current is IEnumerator)
+                                    {
+                                        stack.Push(ce.Current as IEnumerator); //it's pushed because it can yield another IEnumerator on its own
+                                        //push(subprogress);
+                                    }
 						}
 						
-						if (ce is AsyncTask) //asyn
-							_subProgress = (ce as AsyncTask).task.progress * (((float)(startingCount - (registeredEnumerators.Count)) / (float)startingCount) - progress);
-						
+			//			if (ce is AsyncTask) //asyn
+          //                  _subProgress = (ce as AsyncTask).task.progress * (((float)(startingCount - (registeredEnumerators.Count - 1)) / (float)startingCount) - progress);
+		//				else
 						if (ce is EnumeratorWithProgress) //asyn
-							_subProgress = (ce as EnumeratorWithProgress).progress * (((float)(startingCount - (registeredEnumerators.Count)) / (float)startingCount) - progress);
+							_subProgress = (ce as EnumeratorWithProgress).progress / (float)registeredEnumerators.Count;
+
+                        //all the pushed sum subprogress / number of pushed stacked
 					}
 
                     yield return null; //the tasks are not done yet
 				}
 			}
-			
+
 			isRunning = false;
 			
 			if (onComplete != null)

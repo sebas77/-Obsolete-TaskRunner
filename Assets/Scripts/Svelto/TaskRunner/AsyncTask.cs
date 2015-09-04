@@ -2,6 +2,11 @@ using System.Collections;
 
 namespace Svelto.Tasks
 {
+/// <summary>
+/// Transform an ITask to IEnumerator to be usable with the TaskRunner
+/// Can be used to return an ITask from another IEnumerator and run
+/// it properly
+/// </summary>
 	public class AsyncTask: IEnumerator
 	{
 		public IAbstractTask 	task { get; private set; }

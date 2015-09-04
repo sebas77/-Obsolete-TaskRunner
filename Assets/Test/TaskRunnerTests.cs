@@ -51,7 +51,7 @@ namespace Test
 			serialTasks1.Add (iterable1);
 			serialTasks1.Add (iterable2);
 			
-			_taskRunner.RunSync (serialTasks1);
+			_taskRunner.RunSync (serialTasks1.GetEnumerator());
 
 			Assert.That (allDone == true);
 			Assert.That (iterable1.AllRight() == true);
@@ -76,7 +76,7 @@ namespace Test
 			parallelTasks1.Add (iterable1);
 			parallelTasks1.Add (iterable2);
 			
-			_taskRunner.RunSync (parallelTasks1);
+			_taskRunner.RunSync (parallelTasks1.GetEnumerator());
 			
 			Assert.That (allDone == true);
 		}
@@ -157,7 +157,7 @@ namespace Test
 			serialTasks1.Add (parallelTasks1);
 			serialTasks1.Add (parallelTasks2);
 			
-			_taskRunner.RunSync (serialTasks1);
+			_taskRunner.RunSync (serialTasks1.GetEnumerator());
 		}
 
 		[Test]
@@ -179,7 +179,7 @@ namespace Test
 			serialTasks1.Add (parallelTasks2);
 			serialTasks1.onComplete += () => { allDone = true; };
 
-			_taskRunner.RunSync (serialTasks1);
+			_taskRunner.RunSync (serialTasks1.GetEnumerator());
 
 			Assert.That (parallelTasks1Done == true, "parallelTasks1Done");
 			Assert.That (parallelTasks2Done == true, "parallelTasks2Done");
@@ -201,7 +201,7 @@ namespace Test
 			parallelTasks1.Add (serialTasks1);
 			parallelTasks1.Add (serialTasks2);
 
-			_taskRunner.RunSync (parallelTasks1);
+			_taskRunner.RunSync (parallelTasks1.GetEnumerator());
 
 			Assert.That (serialTasks1Done == true);
 		}
@@ -221,7 +221,7 @@ namespace Test
 			parallelTasks1.Add (serialTasks1);
 			parallelTasks1.Add (serialTasks2);
 
-			_taskRunner.RunSync (parallelTasks1);
+			_taskRunner.RunSync (parallelTasks1.GetEnumerator());
 
 			Assert.That (serialTasks2Done == true);
 		}
@@ -241,7 +241,7 @@ namespace Test
 			parallelTasks1.Add (serialTasks2);
 			parallelTasks1.onComplete += () => {allDone = true; };
 
-			_taskRunner.RunSync (parallelTasks1);
+			_taskRunner.RunSync (parallelTasks1.GetEnumerator());
 
 			Assert.That (allDone == true);
 		}
@@ -249,7 +249,7 @@ namespace Test
 		[Test]
 		public void TestSerialTasksExecutedInParallelWithEnumFunction ()
 		{
-			_taskRunner.RunSync (EnumerableFunction());
+			_taskRunner.RunSync (EnumeratorFunction());
 
 			Assert.That (iterations == 10);
 		}
@@ -352,7 +352,7 @@ namespace Test
 			serialTasks1.Add (task1);
 			serialTasks1.Add (task2);
 			
-			_taskRunner.RunSync (serialTasks1);
+			_taskRunner.RunSync (serialTasks1.GetEnumerator());
 		}
 
 		void SetupAndRunParallelTasks ()
@@ -360,10 +360,10 @@ namespace Test
 			parallelTasks1.Add (task1);
 			parallelTasks1.Add (task2);
 			
-			_taskRunner.RunSync (parallelTasks1);
+			_taskRunner.RunSync (parallelTasks1.GetEnumerator());
 		}
 		
-		IEnumerable EnumerableFunction ()
+		IEnumerator EnumeratorFunction ()
 		{
 			while (iterations < 10)
 			{

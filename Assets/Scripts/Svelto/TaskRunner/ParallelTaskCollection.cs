@@ -1,3 +1,4 @@
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Collections;
@@ -29,8 +30,8 @@ namespace Svelto.Tasks
 	public class ParallelTaskCollection: TaskCollection
     {
         public event Action		onComplete;
-		
-		override public 	float progress { get { return _progress;} }
+
+        override public float progress { get { return _progress + _subprogress; } }
  
         public ParallelTaskCollection():base()
         {
@@ -43,8 +44,6 @@ namespace Svelto.Tasks
 			
 			_listOfStacks.Clear();
 			
-			int leftCount;
-			
 			foreach (IEnumerator enumerator in registeredEnumerators)
             {
 				Stack<IEnumerator> stack = new Stack<IEnumerator>();
@@ -54,10 +53,25 @@ namespace Svelto.Tasks
 				_listOfStacks.Add(stack);
 			}
 			
-			leftCount = registeredEnumerators.Count;
-			
 			while (_listOfStacks.Count > 0)
 			{
+                _subprogress = 0;
+
+                for (int i = 0; i < _listOfStacks.Count; ++i)
+                {
+                    Stack<IEnumerator> stack = _listOfStacks[i];
+
+                    if (stack.Count > 0)
+                    {
+                        IEnumerator ce = stack.Peek(); //without popping it.
+
+                        if (ce is EnumeratorWithProgress)
+                            _subprogress += (ce as EnumeratorWithProgress).progress;
+                    }
+                }
+
+                _subprogress /= (float)registeredEnumerators.Count;
+
 				for (int i = 0; i < _listOfStacks.Count; ++i)
 				{
 					Stack<IEnumerator> stack = _listOfStacks[i];
@@ -68,10 +82,6 @@ namespace Svelto.Tasks
 
                         if (ce.MoveNext() == false)
                         {
-                            _progress = (float)(registeredEnumerators.Count - leftCount) / (float)registeredEnumerators.Count;
-
-                            leftCount--;
-
                             stack.Pop(); //now it can be popped
                         }
                         else //ok the iteration is not over
@@ -97,6 +107,9 @@ namespace Svelto.Tasks
 						_listOfStacks[i] = _listOfStacks[_listOfStacks.Count - 1];
 						_listOfStacks.RemoveAt(_listOfStacks.Count - 1);
 
+                        _progress = (float)(registeredEnumerators.Count - _listOfStacks.Count) / (float)registeredEnumerators.Count;
+                        _subprogress = 0.0f;
+
 						i--;
 					}
 				}
@@ -112,6 +125,7 @@ namespace Svelto.Tasks
 		
 		private float 					 _progress;
 		private List<Stack<IEnumerator>> _listOfStacks;
-		private uint					 _maxConcurentTasks;
+        private float                    _subprogress;
     }
 }
+#endif

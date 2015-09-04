@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using Svelto.DataStructures;
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 using UnityEngine;
+#endif
 
 namespace Svelto.Tasks
 {
@@ -37,11 +40,15 @@ namespace Svelto.Tasks
 				uint tasksToExecute;
 
 				do 
-				{
-					yield return new WaitForSeconds(0.1f);
+                {
+                    DateTime time = DateTime.Now;
 
+                    if ((DateTime.Now - time).Milliseconds < 100)
+                        yield return null;
+                    
 					lock (_locker) tasksToExecute = _tasksToExecute;
-				} while (tasksToExecute > 0);
+				} 
+                while (tasksToExecute > 0);
 				
 				isRunning = false;
 			}
@@ -84,9 +91,11 @@ namespace Svelto.Tasks
 						if (ce.Current is IEnumerator)
 							//what we got from the enumeration is an IEnumerator?
 							stack.Push(ce.Current as IEnumerator);
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 						else
 						if (ce.Current is WWW || ce.Current is YieldInstruction)
 							throw new Exception ("Unity YieldInstructions cannot run in other threads");
+#endif
 					}
 				}
 
@@ -97,7 +106,7 @@ namespace Svelto.Tasks
 		void RunMultiThreadParallelTasks()
 		{
 			if (_maxConcurrentTasks == uint.MaxValue)
-				_maxConcurrentTasks = (uint)(registeredEnumerators.Count);
+                _maxConcurrentTasks = (uint)Environment.ProcessorCount;
 			else
 				_maxConcurrentTasks = Math.Min(_maxConcurrentTasks, (uint)(registeredEnumerators.Count));
 

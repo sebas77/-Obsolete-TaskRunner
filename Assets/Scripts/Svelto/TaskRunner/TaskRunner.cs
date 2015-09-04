@@ -1,13 +1,13 @@
 using System.Collections;
 using Svelto.Tasks;
+using Svelto.Tasks.Internal;
+using System;
 
 public class TaskRunner
 {
-	private IRunner _runner;
-	
-	static private TaskRunner _instance;
-		
-	static public TaskRunner Instance
+	static TaskRunner _instance;
+    
+    static public TaskRunner Instance
 	{
 		get 
 		{
@@ -18,30 +18,14 @@ public class TaskRunner
 		}
 	}
 		
-	public void Run(IEnumerable task)
+	public void Run(IEnumerator task, bool isSimple = true)
 	{
 		if (task == null)
 			return;
 
-		Run(task.GetEnumerator());
+         _taskRoutinePool.Start(task, isSimple);
 	}
-	
-	public void Run(IEnumerator task)
-	{
-		if (task == null)
-			return;
 
-		_runner.StartCoroutine(task);
-	}
-	
-	public void RunSync(IEnumerable task)
-	{
-		if (task == null)
-			return;
-
-		RunSync(task.GetEnumerator());
-	}
-	
 	public void RunSync(IEnumerator task)
 	{
 		if (task == null)
@@ -51,44 +35,13 @@ public class TaskRunner
 		
 		while (taskToRun.MoveNext() == true);
 	}
-	
-	public void RunManaged(IEnumerable task)
-	{
-		if (task == null)
-			return;
 
-		RunManaged(task.GetEnumerator());
+    public TaskRoutine CreateTask()
+	{
+        return _taskRoutinePool.RetrieveTask();
 	}
 
-	public void RunManaged(IEnumerator task)
-	{
-		ResumeManaged();
-
-		if (task == null)
-			return;
-
-		_runner.StartCoroutine(task); 
-	}
-
-	public TaskRoutine CreateTask(IEnumerable task)
-	{
-		if (task == null)
-			return null;
-
-		return CreateTask(task.GetEnumerator());
-	}
-
-	public TaskRoutine CreateTask(IEnumerator task)
-	{
-		if (task == null)
-			return null;
-
-		PausableTask ptask = new PausableTask(task, _runner);
-		
-		return new TaskRoutine(ptask);
-	}
-	
-	public void PauseManaged()
+    public void PauseManaged()
 	{
 		_runner.paused = true;
 	}
@@ -103,12 +56,20 @@ public class TaskRunner
 		if (_runner != null)
 			_runner.StopAllCoroutines();
 	}
-	
+
 	static void InitInstance()
 	{
 		_instance 			= new TaskRunner();
-		_instance._runner 	= new MonoTaskRunner();
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
+        _instance._runner = new MonoRunner();
+#else
+        _instance._runner = new MultiThreadRunner();
+#endif
+        _instance._taskRoutinePool = new TaskRoutinePool(_instance._runner);
 	}
+
+    TaskRoutinePool _taskRoutinePool;
+    IRunner         _runner;
 }
 	
 

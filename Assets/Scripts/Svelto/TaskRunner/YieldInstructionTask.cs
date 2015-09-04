@@ -1,5 +1,5 @@
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
 using System.Collections;
-using System;
 using UnityEngine;
 
 namespace Svelto.Tasks
@@ -30,3 +30,4 @@ namespace Svelto.Tasks
 		private IEnumerator 		_enumerator;
 	}
 }
+#endif

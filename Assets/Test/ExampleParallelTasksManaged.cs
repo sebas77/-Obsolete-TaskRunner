@@ -32,7 +32,7 @@ public class ExampleParallelTasksManaged : MonoBehaviour
 		pt.Add(Print("6"));
 		pt.Add(Print("7"));
 			
-		TaskRunner.Instance.RunManaged(pt);
+		TaskRunner.Instance.Run(pt.GetEnumerator());
 	}
 	
 	void Update()

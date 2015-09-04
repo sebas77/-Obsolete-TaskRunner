@@ -1,7 +1,7 @@
+using Svelto.Tasks.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Svelto.Tasks
 {
@@ -10,7 +10,7 @@ namespace Svelto.Tasks
 		protected Queue<IEnumerator> 	registeredEnumerators { get; private set; }
 
 		public bool						isRunning 		{ protected set; get; }
-		public int						registeredTasks { get { return registeredEnumerators.Count; } }
+		public int						tasksRegistered { get { return registeredEnumerators.Count; } }
 		
 		abstract public 				float progress { get; }
 		
@@ -36,8 +36,8 @@ namespace Svelto.Tasks
 				registeredEnumerators.Enqueue(new EnumeratorWithProgress(enumerable.GetEnumerator(), 
 													() => (enumerable as TaskCollection).progress));
 				
-				if ((enumerable as TaskCollection).registeredTasks == 0)
-					Debug.LogError("Avoid to Register zero size tasks");
+				if ((enumerable as TaskCollection).tasksRegistered == 0)
+					Console.WriteLine("Avoid to register zero size collections");
 			}
 			else
 				registeredEnumerators.Enqueue(enumerable.GetEnumerator());
@@ -53,6 +53,11 @@ namespace Svelto.Tasks
 			
 			registeredEnumerators.Enqueue(enumerator);
 		}
+
+        public void Reset()
+        {
+            registeredEnumerators.Clear();
+        }
 		
 		abstract public IEnumerator GetEnumerator();
 	}

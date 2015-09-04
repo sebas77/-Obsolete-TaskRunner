@@ -1,26 +1,22 @@
+using System;
 using System.Collections;
 
-namespace Svelto.Tasks
+namespace Svelto.Tasks.Internal
 {
-	public class PausableTask: IEnumerator
+	internal class PausableTask: IEnumerator
 	{
-		public object Current 		{ get { return _enumerator.Current; } }
-				 
-		public PausableTask(IEnumerator enumerator, IRunner runner)
-		{
-			_enumerator = new SingleTask(enumerator); //SingleTask is needed to be able to pause sub tasks
-			
-			_runner = runner;
-		}
+		public object Current 		
+        { 
+            get 
+            { 
+                if (_enumerator != null)
+                    return _enumerator.Current;
 
-		public PausableTask(SingleTask enumerator, IRunner runner)
-		{
-			_enumerator = enumerator;
+                return null;
+            } 
+        }
 
-			_runner = runner;
-		}
-		
-		public bool MoveNext()
+        public bool MoveNext()
 		{
 			if (_stopped || _runner.stopped)
 				return false;
@@ -33,29 +29,66 @@ namespace Svelto.Tasks
 		
 		public void Reset()
 		{
-			_enumerator.Reset();
-		}
-
-		public void Start()
+            throw new NotImplementedException("Pausable Tasks do not support Reset");
+        }
+				 
+		internal PausableTask(IEnumerator enumerator, IRunner runner)
 		{
-			_runner.StartCoroutine(this);
+            if (enumerator is SingleTask || enumerator is PausableTask || enumerator is AsyncTask)
+				throw new ArgumentException("Use of incompatible Enumerator, cannot be SingleTask/PausableTask/AsyncTask");
+
+            _enumerator = enumerator;
+			
+			_runner = runner;
 		}
 
-		public void Pause()
+        internal PausableTask(IRunner runner)
+		{
+            _runner = runner;
+		}
+
+		internal void Start(bool isSimple)
+		{
+            SetTask(_enumerator, isSimple);
+
+            _runner.StartCoroutine(this);
+		}
+
+        internal void Start(IEnumerator task, bool isSimple)
+		{
+            SetTask(task, isSimple);
+
+            _runner.StartCoroutine(this);
+		}
+
+		internal void Pause()
 		{
 			_paused = true;
 		}
 
-		public void Resume()
+		internal void Resume()
 		{
 			_paused = false;
 		}
 		
-		public void Stop()
+		internal void Stop()
 		{
 			_stopped = true;
 			_enumerator = null;
 		}
+
+        void SetTask(IEnumerator task, bool isSimple)
+        {
+            if (isSimple == false)
+            {
+                if (_enumerator is SingleTask)
+                    (_enumerator as SingleTask).Reuse(task);
+                else
+                    _enumerator = new SingleTask(task);
+            }
+            else
+                _enumerator = task;
+        }
 		
 		IRunner 		_runner;
 		bool			_stopped = false;
