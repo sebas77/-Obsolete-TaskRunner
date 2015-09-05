@@ -1,139 +1,138 @@
+using Svelto.Tasks.Internal;
 using System;
-using System.Collections.Generic;
 using System.Collections;
-using Svelto.DataStructures;
+using System.Threading;
 #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
-using UnityEngine;
 #endif
 
 namespace Svelto.Tasks
 {
-	public class MultiThreadParallelTaskCollection: TaskCollection
+    /// <summary>
+    /// a ParallelTaskCollection ran by MultiThreadRunner will run the tasks in a single thread
+    /// MultiThreadParallelTaskCollection enables parallel tasks to run on different threads
+    /// </summary>
+    public class MultiThreadParallelTaskCollection : TaskCollection
     {
-        public event Action		onComplete;
-		
-		override public 	float progress { get { return _progress;} }
- 
-		public MultiThreadParallelTaskCollection(MultiThreadRunner runner):base()
+        const int MAX_CONCURRENT_TASK = 8;
+
+        public event Action onComplete;
+
+        override public float progress { get { return _progress; } }
+
+        public MultiThreadParallelTaskCollection(MultiThreadRunner runner) : base()
         {
-			_maxConcurrentTasks = uint.MaxValue;
-			_runner = runner;
-		}
+            _maxConcurrentTasks = uint.MaxValue;
+            _taskRoutinePool = new TaskRoutinePool(runner);
 
-		public MultiThreadParallelTaskCollection(MultiThreadRunner runner, uint maxConcurrentTasks):base()
-		{
-			_maxConcurrentTasks = maxConcurrentTasks;
-			_runner = runner;
-		}
-		
-		override public IEnumerator GetEnumerator()
-		{
-			_totalTasks = _tasksToExecute = (uint)registeredEnumerators.Count;
-			_tasksLaunched = 0;
-
-			if (_tasksToExecute > 0)
-			{
-				isRunning = true;
-				
-				RunMultiThreadParallelTasks();
-
-				uint tasksToExecute;
-
-				do 
-                {
-                    DateTime time = DateTime.Now;
-
-                    if ((DateTime.Now - time).Milliseconds < 100)
-                        yield return null;
-                    
-					lock (_locker) tasksToExecute = _tasksToExecute;
-				} 
-                while (tasksToExecute > 0);
-				
-				isRunning = false;
-			}
-						
-			if (onComplete != null)
-				onComplete();
+            ComputeMaxConcurrentTasks();
         }
 
-		IEnumerator ParallelTask(IEnumerator enumerator)
-		{
-			Stack<IEnumerator> stack = new Stack<IEnumerator>();
-			stack.Push(enumerator);
+        public MultiThreadParallelTaskCollection(MultiThreadRunner runner, uint maxConcurrentTasks) : this(runner)
+        {
+            _maxConcurrentTasks = Math.Min(MAX_CONCURRENT_TASK, _maxConcurrentTasks);
+        }
 
-			lock (_locker) _tasksLaunched++;
+        private void ComputeMaxConcurrentTasks()
+        {
+            if (_maxConcurrentTasks != uint.MaxValue)
+                _maxConcurrentTasks = Math.Min(_maxConcurrentTasks, (uint)(registeredEnumerators.Count));
+        }
 
-			while (stack.Count > 0) 
-			{
-				IEnumerator ce = stack.Peek();
-				//without popping it.
-				if (ce.MoveNext () == false) 
-				{
-					lock (_locker) _progress = (float)(_totalTasks - _registeredEnumerators.Count) / _totalTasks;
+        override public IEnumerator GetEnumerator()
+        {
+            _startingCount = registeredEnumerators.Count;
 
-					stack.Pop();
+            if (_startingCount > 0)
+            {
+                isRunning = true;
 
-					if (_registeredEnumerators.Count > 0)
-						RunNewParallelTask();
+                RunMultiThreadParallelTasks();
 
-					lock (_locker) _tasksToExecute--;
-				}
-				else
-				{
-					//ok the iteration is not over
-					if (ce.Current != null && ce.Current != ce) 
-					{
-						if (ce.Current is IEnumerable)
-							//what we got from the enumeration is an IEnumerable?
-							stack.Push (((IEnumerable)ce.Current).GetEnumerator ());
-						else
-						if (ce.Current is IEnumerator)
-							//what we got from the enumeration is an IEnumerator?
-							stack.Push(ce.Current as IEnumerator);
-#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_IPHONE || UNITY_ANDROID || UNITY_EDITOR
-						else
-						if (ce.Current is WWW || ce.Current is YieldInstruction)
-							throw new Exception ("Unity YieldInstructions cannot run in other threads");
-#endif
-					}
-				}
+                isRunning = false;
+            }
 
-				yield return null; //in order to be able to pause this task, the yield must be here
-			}
-		}
+            if (onComplete != null)
+                onComplete();
 
-		void RunMultiThreadParallelTasks()
-		{
-			if (_maxConcurrentTasks == uint.MaxValue)
-                _maxConcurrentTasks = (uint)Environment.ProcessorCount;
-			else
-				_maxConcurrentTasks = Math.Min(_maxConcurrentTasks, (uint)(registeredEnumerators.Count));
+            yield return null;
+        }
 
-			_maxConcurrentTasks = Math.Min(MAX_CONCURRENT_TASK, _maxConcurrentTasks);
+        void OnThreadedTaskDone()
+        {
+            lock (_locker)
+            {
+                --_counter;
+               _progress = (float)(_startingCount - registeredEnumerators.Count) / (float)_startingCount;
 
-			_registeredEnumerators = new ThreadSafeQueue<IEnumerator>(registeredEnumerators);
+                Monitor.Pulse(_locker);
+            }
+            
+            _countdown.Signal();
+        }
 
-			for (int i = 0; i < _maxConcurrentTasks; i++)
-				if (_registeredEnumerators.Count > 0)
-					RunNewParallelTask();
-		}
+        void RunMultiThreadParallelTasks()
+        {
+            _counter = 0;
 
-		void RunNewParallelTask()
-		{
-			_runner.StartCoroutine(ParallelTask(_registeredEnumerators.Dequeue()));
-		}
-		
-		volatile float 					_progress;
-		volatile float					_totalTasks;
+            _countdown.AddCount(registeredEnumerators.Count);
 
-		uint							_tasksToExecute;
-		uint							_tasksLaunched;
-		uint					 		_maxConcurrentTasks;
-		ThreadSafeQueue<IEnumerator> 	_registeredEnumerators;
-		MultiThreadRunner				_runner;
-		object							_locker = new object();
+            while (registeredEnumerators.Count > 0)
+            {
+                _taskRoutinePool.RetrieveTask().Start(RunTask(), false);
+                                
+                lock (_locker)
+                {
+                    if (++_counter >= _maxConcurrentTasks)
+                        Monitor.Wait(_locker);
+                }
+            }
 
-		const int						MAX_CONCURRENT_TASK = 8;
+            _countdown.Wait();
+        }
+
+        private IEnumerator RunTask()
+        {
+            yield return registeredEnumerators.Dequeue();
+
+            OnThreadedTaskDone();
+        }
+
+        volatile float _progress;
+        volatile float _totalTasks;
+
+        uint                _maxConcurrentTasks;
+        object              _locker = new object();
+        Countdown           _countdown = new Countdown();
+        volatile int        _counter = 0;
+        int                 _startingCount;
+
+        TaskRoutinePool     _taskRoutinePool;
+    }
+
+    public class Countdown
+    {
+        object _locker = new object();
+        int _value;
+
+        public Countdown() { }
+        public Countdown(int initialCount) { _value = initialCount; }
+
+        public void Signal() { AddCount(-1); }
+
+        public void AddCount(int amount)
+        {
+            lock (_locker)
+            {
+                _value += amount;
+                if (_value <= 0) Monitor.PulseAll(_locker);
+            }
+        }
+
+        public void Wait()
+        {
+            lock (_locker)
+              while (_value > 0)
+                    Monitor.Wait(_locker);
+        }
     }
 }

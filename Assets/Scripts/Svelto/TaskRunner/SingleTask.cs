@@ -13,6 +13,8 @@ namespace Svelto.Tasks
 {
 	public class SingleTask: IEnumerator
 	{
+        public event Action		onComplete;
+
 		public object Current 		{ get { return _enumerator.Current; } }
 				 
 		public SingleTask(IEnumerator enumerator)
@@ -25,15 +27,15 @@ namespace Svelto.Tasks
 			
 			_enumerator = _task.GetEnumerator();
 						
-			_onComplete = null;
+			onComplete = null;
 		}
 		
 		public bool MoveNext()
 		{
 			if (_enumerator.MoveNext() == false)
 			{
-				if (_onComplete != null)
-					_onComplete();
+				if (onComplete != null)
+					onComplete();
 				
 				return false;
 			}
@@ -54,13 +56,11 @@ namespace Svelto.Tasks
 				_enumerator = _task.GetEnumerator();
 			}
 			
-			_onComplete = null;
+			onComplete = null;
         }
-
 
         IEnumerator		        _enumerator;
         SerialTaskCollection	_task;
-		Action 	                _onComplete;
 	}
 }
 

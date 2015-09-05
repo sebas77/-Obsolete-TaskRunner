@@ -7,7 +7,6 @@ namespace Svelto.Tasks
 		void	StartCoroutine(IEnumerator task);
                 
         void 	StopAllCoroutines();
-        void    StopManagedCoroutines();
 				
 		bool    paused { get; set; }
 		bool    stopped { get; }
