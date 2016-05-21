@@ -5,7 +5,7 @@ Runs Asynchronous tasks in Parallel and Serial. More information here: http://bl
 
 Just copy the files in your Asset folder and use the scene included to test the code.
 
-Copyright (c) 2012 Sebastiano Mandalà
+Copyright (c) Sebastiano Mandalà
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
