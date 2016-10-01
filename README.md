@@ -1,7 +1,7 @@
-TaskRunner for Unity3D
+[OBSOLETE AND DEPRECATED] TaskRunner for Unity3D
 ======================
 
-ATTENTION: THIS PRODUCT IS NOW DEPRECATED AND OBSOLETE. NEW VERSION IS HERE: https://github.com/sebas77/Svelto.Task
+**ATTENTION: THIS PRODUCT IS NOW DEPRECATED AND OBSOLETE. NEW VERSION IS HERE: https://github.com/sebas77/Svelto.Task**
 
 Runs Asynchronous tasks in Parallel and Serial. More information here: http://blog.sebaslab.com/run-serial-parallel-asynchronous-tasks-unity3d-c/
 
